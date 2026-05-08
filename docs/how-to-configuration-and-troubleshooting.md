@@ -1,6 +1,6 @@
 # How-to: Configuration and troubleshooting
 
-Problem-oriented recipes for running and integrating the Notes demo.
+Problem-oriented recipes for running and integrating the **WebClock Notes** demo.
 
 ---
 
@@ -22,11 +22,11 @@ Problem-oriented recipes for running and integrating the Notes demo.
 
   Or paste equivalent keys into your IDE run configuration.
 
-- Required for a normal local run: **`JWT_SECRET`** (≥ 32 bytes of entropy in practice — generate with `openssl rand -base64 48`), plus **`SPRING_DATASOURCE_*`** matching your Postgres container.
+- Strongly recommended: set **`JWT_SECRET`** in `.env` (≥ 32 bytes of entropy in practice — generate with `openssl rand -base64 48`), plus **`SPRING_DATASOURCE_*`** matching your Postgres container. If **`JWT_SECRET`** is **not** set, `application.yml` applies a **fixed development default** so the process can start; that is **not** appropriate for shared machines, CI secrets, or production-like environments, and **changing the secret invalidates existing tokens**.
 
 **Frontend (`notes-app/frontend/`)**
 
-- Prefer **`.env.local`** (copy from `frontend/.env.example`) for `VITE_*` variables.
+- Prefer **`notes-app/frontend/.env.local`** (copy from **`notes-app/frontend/.env.example`**) for `VITE_*` variables.
 - **Never put database passwords or JWT signing keys in the frontend.** Only names prefixed with `VITE_` are exposed to the browser; assume anything there is public.
 
 ---
@@ -83,3 +83,13 @@ Create/update bodies are validated: title max length **500**, Markdown content m
 ## Frontend shows empty list but curl works
 
 Usually a **wrong `VITE_API_URL`**, **CORS**, or **mixed content** (HTTPS page calling HTTP API). Check the browser network tab and compare request URL and response headers with the recipes above.
+
+---
+
+## Note requests return **401 Unauthorized**
+
+Protected routes (**`/webclock-notes`**, **`/notes/*`**) call **`/api/notes`** with a Bearer token stored after **login/register**.
+
+- Confirm you completed **Register** or **Sign in**; open DevTools (**Application** → **Local storage**) if you want to verify a token exists for this origin / hash route.
+- If you **changed `JWT_SECRET`** or restarted Postgres / wiped volumes, **sign in again** so the client obtains a fresh token.
+- For manual **`curl`** tests against **`/api/notes`**, call **`POST /api/auth/login`** first and send **`Authorization: Bearer <accessToken>`** on subsequent requests.

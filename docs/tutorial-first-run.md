@@ -1,6 +1,6 @@
-# Tutorial: First run (Notes app end-to-end)
+# Tutorial: First run (WebClock Notes end-to-end)
 
-**Goal:** Run PostgreSQL, the Spring Boot API, and the Vite frontend so you can create and edit Markdown notes in the browser.
+**Goal:** Run PostgreSQL, the Spring Boot API, and the Vite frontend so you can **register**, **sign in**, and create and edit Markdown notes in the browser.
 
 **Audience:** Developers comfortable with a terminal, Docker, and `npm`.
 
@@ -33,7 +33,7 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
 2. Edit `.env`:
    - Set **`POSTGRES_PASSWORD`** to a strong value for your machine.
    - Set **`SPRING_DATASOURCE_PASSWORD`** to the **same** value (the API uses it to connect).
-   - Set **`JWT_SECRET`** to a random string at least 32 characters long (for example run `openssl rand -base64 48` and paste the output). The API will not start without it.
+   - Set **`JWT_SECRET`** to a long random secret (for example `openssl rand -base64 48`). **Always set this** for anything beyond quick solo experimentation on your machine (`application.yml` includes a **dev-only fallback** so the JVM can boot if you skip it once — never use that for shared hosts or production-like stacks).
    - Do **not** commit `.env` — it is listed in the repository `.gitignore`.
 
 3. Start the database:
@@ -105,11 +105,13 @@ Open the dev URL Vite prints (commonly `http://localhost:5173`).
 
 ## Step 6: Use the app
 
-1. Open the notes list (`/`).
-2. Create a new note (`/notes/new`), add a title and Markdown body, and save.
-3. Open the note from the list and edit or delete it.
+1. Open the dev URL from Step 5 (e.g. `http://localhost:5173`). **`/`** redirects into the app shell.
+2. **Register** at **`/register`** (username **3+** characters, password **8+** characters) or **Sign in** at **`/login`** if you already have an account.
+3. After authentication you should land on the notes list at **`/webclock-notes`**.
+4. Create a note from **`/notes/new`**, add a title and Markdown body, and save.
+5. Open a note from the list (**`/notes/{id}`**) to read, edit, or delete.
 
-If list loads fail, see [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md).
+If list loads fail with **401**, ensure you are logged in and that the backend has a stable **`JWT_SECRET`** (tokens from a previous run are invalid if the secret changes). For other issues, see [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md).
 
 ---
 
@@ -127,6 +129,4 @@ Tests use an in-memory H2 database; they do not require Docker.
 
 ## What you learned
 
-You now have a three-process setup: Postgres, Spring Boot on port **8080**, and Vite on port **5173**, with CORS allowing the browser to call the API. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.
-
-**Authentication:** Register and sign in via the UI; the API requires a JWT for note endpoints — set **`JWT_SECRET`** in the environment when running the backend (see Step 3).
+You now have a three-process setup: Postgres, Spring Boot on port **8080**, and Vite on port **5173**, with CORS allowing the browser to call the API. The note API is **JWT-protected**; notes are **isolated per user**. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.
