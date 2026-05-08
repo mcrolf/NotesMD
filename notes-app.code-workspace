@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "name": "backend",
+      "path": "notes-app/backend"
+    },
+    {
+      "name": "frontend",
+      "path": "notes-app/frontend"
+    },
+    {
+      "name": "repo",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "java.import.gradle.enabled": true,
+    "java.import.gradle.wrapper.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic"
+  }
+}

@@ -12,11 +12,17 @@ This repository contains a small full-stack **Notes** demo: a React (Vite) front
 
 ## Quick start
 
-1. Start the database (from `notes-app/`): copy `notes-app/.env.example` to `notes-app/.env`, adjust values if needed, then run `docker compose up -d`.
-2. Run the API (from `notes-app/backend/`): `./gradlew bootRun`.
-3. Run the UI (from `notes-app/frontend/`): `npm install` then `npm run dev`.
+1. Start the database (from `notes-app/`): copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file), then run `docker compose up -d`.
+2. Run the API (from `notes-app/backend/`): load the same variables into the environment (see [Environment variables](docs/how-to-configuration-and-troubleshooting.md#environment-variables-security-and-loading)), then `./gradlew bootRun`.
+3. Run the UI (from `notes-app/frontend/`): `npm install` then `npm run dev`. Optionally copy `frontend/.env.example` to `frontend/.env.local` if you need a non-default API URL.
 
-Open the URL Vite prints (typically `http://localhost:5173`). The UI expects the API at `http://localhost:8080` unless you set `VITE_API_URL` (see `notes-app/frontend/.env.example`).
+Open the URL Vite prints (typically `http://localhost:5173`). The UI expects the API at `http://localhost:8080` unless you set `VITE_API_URL` in `frontend/.env.local` (see `notes-app/frontend/.env.example`). **Never put API secrets in frontend env files** — only `VITE_*` keys, and they are visible in the browser.
+
+## Environment variables
+
+- **Templates (safe to commit):** `notes-app/.env.example`, `notes-app/frontend/.env.example` — placeholders and documentation only.
+- **Real values (never commit):** copy to `notes-app/.env`, `notes-app/frontend/.env.local`, etc. These patterns are listed in the repository [`.gitignore`](.gitignore) along with `.cursor/` and `.vscode/`.
+- **Details:** [Configuration and troubleshooting — Environment variables](docs/how-to-configuration-and-troubleshooting.md#environment-variables-security-and-loading).
 
 ## Full documentation
 

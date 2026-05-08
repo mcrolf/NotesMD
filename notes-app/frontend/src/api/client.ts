@@ -1,5 +1,7 @@
 /** MN 260506 Notes REST API client; base URL from `VITE_API_URL` or `http://localhost:8080`. */
 
+import { getAccessToken } from '@/auth/authStorage'
+
 export type NoteResponse = {
   id: string
   title: string
@@ -37,6 +39,13 @@ export class ApiError extends Error {
   }
 }
 
+let unauthorizedHandler: (() => void) | null = null
+
+/** Wired by `AuthProvider` so 401 on Bearer requests clears the session and redirects to login. */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler
+}
+
 function apiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_URL
   const trimmed = typeof raw === 'string' ? raw.trim() : ''
@@ -56,10 +65,13 @@ async function parseJson<T>(res: Response): Promise<T | undefined> {
   return JSON.parse(text) as T
 }
 
-async function handleResponse<T>(res: Response): Promise<T> {
+async function handleResponse<T>(res: Response, hadAuth: boolean): Promise<T> {
   if (res.status === 204) return undefined as T
 
   if (!res.ok) {
+    if (res.status === 401 && hadAuth) {
+      unauthorizedHandler?.()
+    }
     const text = await res.text()
     let body: ApiErrorBody | undefined
     try {
@@ -75,13 +87,21 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return data as T
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers)
-  if (init?.body !== undefined && !headers.has('Content-Type')) {
+export type ApiFetchInit = RequestInit & { skipAuth?: boolean }
+
+export async function apiFetch<T>(path: string, init?: ApiFetchInit): Promise<T> {
+  const { skipAuth, ...rest } = init ?? {}
+  const headers = new Headers(rest.headers)
+  if (rest.body !== undefined && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
-  const res = await fetch(joinUrl(path), { ...init, headers })
-  return handleResponse<T>(res)
+  const token = skipAuth === true ? null : getAccessToken()
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+  const hadAuth = headers.has('Authorization')
+  const res = await fetch(joinUrl(path), { ...rest, headers })
+  return handleResponse<T>(res, hadAuth)
 }
 
 export const notesApi = {
@@ -110,6 +130,41 @@ export const notesApi = {
   delete(id: string): Promise<void> {
     return apiFetch<void>(`/api/notes/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+    })
+  },
+}
+
+export type AuthCredentialsRequest = {
+  username: string
+  password: string
+}
+
+export type LoginResponse = {
+  accessToken: string
+  tokenType: string
+  expiresIn: number
+  username: string
+}
+
+export type AuthRegisterResponse = {
+  userId: string
+  username: string
+}
+
+export const authApi = {
+  register(body: AuthCredentialsRequest): Promise<AuthRegisterResponse> {
+    return apiFetch<AuthRegisterResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      skipAuth: true,
+    })
+  },
+
+  login(body: AuthCredentialsRequest): Promise<LoginResponse> {
+    return apiFetch<LoginResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      skipAuth: true,
     })
   },
 }

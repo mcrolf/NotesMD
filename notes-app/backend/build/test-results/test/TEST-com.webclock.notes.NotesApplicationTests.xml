@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.webclock.notes.NotesApplicationTests" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-05-08T20:19:44.779Z" hostname="MicMacM4.local" time="0.536">
+<testsuite name="com.webclock.notes.NotesApplicationTests" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-05-08T20:46:08.653Z" hostname="MicMacM4.local" time="1.579">
   <properties/>
-  <testcase name="crudRoundTrip()" classname="com.webclock.notes.NotesApplicationTests" time="0.515"/>
-  <testcase name="healthIsUp()" classname="com.webclock.notes.NotesApplicationTests" time="0.011"/>
-  <testcase name="contextLoads()" classname="com.webclock.notes.NotesApplicationTests" time="0.002"/>
-  <testcase name="notFound_returns404Payload()" classname="com.webclock.notes.NotesApplicationTests" time="0.008"/>
-  <system-out><![CDATA[16:19:42.776 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.webclock.notes.NotesApplicationTests]: NotesApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-16:19:42.813 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.webclock.notes.NotesApplication for test class com.webclock.notes.NotesApplicationTests
+  <testcase name="crudRoundTrip()" classname="com.webclock.notes.NotesApplicationTests" time="0.612"/>
+  <testcase name="notesWithoutToken_returns401()" classname="com.webclock.notes.NotesApplicationTests" time="0.007"/>
+  <testcase name="registerDuplicateUsername_returns409()" classname="com.webclock.notes.NotesApplicationTests" time="0.075"/>
+  <testcase name="listNotes_onlyReturnsNotesForCurrentUser()" classname="com.webclock.notes.NotesApplicationTests" time="0.304"/>
+  <testcase name="loginWithBadPassword_returns401()" classname="com.webclock.notes.NotesApplicationTests" time="0.139"/>
+  <testcase name="healthIsUp()" classname="com.webclock.notes.NotesApplicationTests" time="0.012"/>
+  <testcase name="contextLoads()" classname="com.webclock.notes.NotesApplicationTests" time="0.001"/>
+  <testcase name="crossTenantNoteAccess_returns404()" classname="com.webclock.notes.NotesApplicationTests" time="0.285"/>
+  <testcase name="notFound_returns404Payload()" classname="com.webclock.notes.NotesApplicationTests" time="0.143"/>
+  <system-out><![CDATA[16:46:06.425 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.webclock.notes.NotesApplicationTests]: NotesApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+16:46:06.463 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.webclock.notes.NotesApplication for test class com.webclock.notes.NotesApplicationTests
 
 __        __   _      ____ _            _    
 \ \      / /__| |__  / ___| | ___   ___| | __
@@ -15,34 +20,34 @@ __        __   _      ____ _            _
    \_/\_/ \___|_.__/ \____|_|\___/ \___|_|\_\
 
 
-2026-05-08T16:19:42.953-04:00  INFO 93520 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : Starting NotesApplicationTests using Java 17.0.19 with PID 93520 (started by michaelnapoli in /Users/michaelnapoli/Development/Abingdon_AIx_Demo_20260507/notes-app/backend)
-2026-05-08T16:19:42.954-04:00  INFO 93520 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : No active profile set, falling back to 1 default profile: "default"
-2026-05-08T16:19:43.247-04:00  INFO 93520 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-05-08T16:19:43.265-04:00  INFO 93520 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 14 ms. Found 2 JPA repository interfaces.
-2026-05-08T16:19:43.518-04:00  INFO 93520 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
-2026-05-08T16:19:43.522-04:00  INFO 93520 --- [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-05-08T16:19:43.523-04:00  INFO 93520 --- [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
-2026-05-08T16:19:43.545-04:00  INFO 93520 --- [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-05-08T16:19:43.546-04:00  INFO 93520 --- [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 586 ms
-2026-05-08T16:19:43.684-04:00  INFO 93520 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-05-08T16:19:43.741-04:00  INFO 93520 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:notes user=SA
-2026-05-08T16:19:43.742-04:00  INFO 93520 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-05-08T16:19:43.758-04:00  INFO 93520 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:notes (H2 2.3)
-2026-05-08T16:19:43.759-04:00  WARN 93520 --- [    Test worker] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.3.232 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.224.
-2026-05-08T16:19:43.767-04:00  INFO 93520 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
-2026-05-08T16:19:43.768-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.004s)
-2026-05-08T16:19:43.770-04:00  INFO 93520 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "PUBLIC"."flyway_schema_history" ...
-2026-05-08T16:19:43.784-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": << Empty Schema >>
-2026-05-08T16:19:43.786-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "1 - notes baseline"
-2026-05-08T16:19:43.792-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "2 - users and legacy owner"
-2026-05-08T16:19:43.795-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "3 - notes owner id"
-2026-05-08T16:19:43.803-04:00  INFO 93520 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 3 migrations to schema "PUBLIC", now at version v3 (execution time 00:00.007s)
-2026-05-08T16:19:43.839-04:00  INFO 93520 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-05-08T16:19:43.856-04:00  INFO 93520 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.4.Final
-2026-05-08T16:19:43.866-04:00  INFO 93520 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-05-08T16:19:43.952-04:00  INFO 93520 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-05-08T16:19:43.968-04:00  WARN 93520 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-05-08T16:19:43.973-04:00  INFO 93520 --- [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-05-08T16:46:06.612-04:00  INFO 12046 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : Starting NotesApplicationTests using Java 17.0.19 with PID 12046 (started by michaelnapoli in /Users/michaelnapoli/Development/Abingdon_AIx_Demo_20260507/notes-app/backend)
+2026-05-08T16:46:06.612-04:00  INFO 12046 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-05-08T16:46:06.938-04:00  INFO 12046 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-08T16:46:06.961-04:00  INFO 12046 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 18 ms. Found 2 JPA repository interfaces.
+2026-05-08T16:46:07.250-04:00  INFO 12046 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-05-08T16:46:07.256-04:00  INFO 12046 --- [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-08T16:46:07.256-04:00  INFO 12046 --- [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-05-08T16:46:07.280-04:00  INFO 12046 --- [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-05-08T16:46:07.281-04:00  INFO 12046 --- [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 661 ms
+2026-05-08T16:46:07.495-04:00  INFO 12046 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-08T16:46:07.558-04:00  INFO 12046 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:notes user=SA
+2026-05-08T16:46:07.559-04:00  INFO 12046 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-08T16:46:07.578-04:00  INFO 12046 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:notes (H2 2.3)
+2026-05-08T16:46:07.581-04:00  WARN 12046 --- [    Test worker] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.3.232 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.224.
+2026-05-08T16:46:07.589-04:00  INFO 12046 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-05-08T16:46:07.590-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.005s)
+2026-05-08T16:46:07.593-04:00  INFO 12046 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-05-08T16:46:07.608-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": << Empty Schema >>
+2026-05-08T16:46:07.610-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "1 - notes baseline"
+2026-05-08T16:46:07.616-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "2 - users and legacy owner"
+2026-05-08T16:46:07.619-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "3 - notes owner id"
+2026-05-08T16:46:07.629-04:00  INFO 12046 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 3 migrations to schema "PUBLIC", now at version v3 (execution time 00:00.008s)
+2026-05-08T16:46:07.667-04:00  INFO 12046 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-08T16:46:07.687-04:00  INFO 12046 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.4.Final
+2026-05-08T16:46:07.698-04:00  INFO 12046 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-08T16:46:07.790-04:00  INFO 12046 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-08T16:46:07.805-04:00  WARN 12046 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-05-08T16:46:07.811-04:00  INFO 12046 --- [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 2.3.232
@@ -50,15 +55,15 @@ __        __   _      ____ _            _
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-05-08T16:19:44.258-04:00  INFO 93520 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-05-08T16:19:44.265-04:00  INFO 93520 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-05-08T16:19:44.424-04:00  WARN 93520 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-05-08T16:19:44.658-04:00  INFO 93520 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
-2026-05-08T16:19:44.751-04:00  INFO 93520 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 50059 (http) with context path '/'
-2026-05-08T16:19:44.761-04:00  INFO 93520 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : Started NotesApplicationTests in 1.907 seconds (process running for 2.272)
-2026-05-08T16:19:45.053-04:00  INFO 93520 --- [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-05-08T16:19:45.053-04:00  INFO 93520 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-05-08T16:19:45.054-04:00  INFO 93520 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-05-08T16:46:08.088-04:00  INFO 12046 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-08T16:46:08.094-04:00  INFO 12046 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-08T16:46:08.259-04:00  WARN 12046 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-08T16:46:08.399-04:00  INFO 12046 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-05-08T16:46:08.626-04:00  INFO 12046 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 50817 (http) with context path '/'
+2026-05-08T16:46:08.634-04:00  INFO 12046 --- [    Test worker] c.webclock.notes.NotesApplicationTests   : Started NotesApplicationTests in 2.125 seconds (process running for 2.492)
+2026-05-08T16:46:08.930-04:00  INFO 12046 --- [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-08T16:46:08.930-04:00  INFO 12046 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-08T16:46:08.931-04:00  INFO 12046 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

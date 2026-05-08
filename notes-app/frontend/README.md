@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Environment variables (this app)
+
+Copy `.env.example` to **`.env.local`** for local overrides (e.g. `VITE_API_URL`). Only `VITE_*` names are exposed to the browser — never place API signing keys or database passwords here. From the repository root, see **[Configuration and troubleshooting](../../docs/how-to-configuration-and-troubleshooting.md#environment-variables-security-and-loading)**.
+
+---
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

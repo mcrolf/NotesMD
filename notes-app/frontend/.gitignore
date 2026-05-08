@@ -14,9 +14,7 @@ release
 dist-ssr
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Editor directories and files (repo root `.gitignore` also ignores `.vscode/` and `.cursor/` everywhere)
 .idea
 .DS_Store
 *.suo

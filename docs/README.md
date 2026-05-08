@@ -12,4 +12,5 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) structure: sepa
 ## Project layout (reminder)
 
 - Application code: `notes-app/`
-- Environment templates: `notes-app/.env.example`, `notes-app/frontend/.env.example`
+- Environment templates (commit these; use placeholders only): `notes-app/.env.example`, `notes-app/frontend/.env.example`
+- Local secrets and editor dirs: never commit — see repository [`.gitignore`](../.gitignore) (e.g. `.env`, `.env.*`, `.cursor/`, `.vscode/`)

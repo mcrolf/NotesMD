@@ -30,7 +30,11 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
    cp .env.example .env
    ```
 
-2. Edit `.env` and set `POSTGRES_PASSWORD` (and optionally other variables) to values you will use. Do not commit `.env`.
+2. Edit `.env`:
+   - Set **`POSTGRES_PASSWORD`** to a strong value for your machine.
+   - Set **`SPRING_DATASOURCE_PASSWORD`** to the **same** value (the API uses it to connect).
+   - Set **`JWT_SECRET`** to a random string at least 32 characters long (for example run `openssl rand -base64 48` and paste the output). The API will not start without it.
+   - Do **not** commit `.env` — it is listed in the repository `.gitignore`.
 
 3. Start the database:
 
@@ -38,19 +42,33 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
    docker compose up -d
    ```
 
+   Compose automatically reads `.env` in this directory for variable **substitution** in `docker-compose.yml` (e.g. Postgres credentials).
+
 4. Wait until the container is healthy. The compose file defines a `pg_isready` healthcheck.
 
 ---
 
 ## Step 3: Align JDBC settings with Postgres
 
-The API reads `SPRING_DATASOURCE_*` from the environment. Defaults in `backend/src/main/resources/application.yml` assume:
+The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment** (Spring Boot does not automatically load `notes-app/.env` unless you configure that separately).
+
+**Ways to load `notes-app/.env` when running the API:**
+
+- From `notes-app/`, before `backend` commands:
+
+  ```bash
+  set -a && source .env && set +a && cd backend && ./gradlew bootRun
+  ```
+
+- Or export the variables manually / use your IDE’s Run Configuration environment field to match `.env`.
+
+Defaults in `backend/src/main/resources/application.yml` assume:
 
 - URL: `jdbc:postgresql://localhost:5432/notes`
 - User: `notes`
-- Password: `changeme`
+- Password: `changeme` (override with `SPRING_DATASOURCE_PASSWORD` from `.env`)
 
-If your `.env` uses different credentials, either export the matching `SPRING_DATASOURCE_*` variables before starting the API or change the defaults consistently in `.env` and your shell.
+If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURCE_*` values match Postgres.
 
 ---
 
@@ -110,3 +128,5 @@ Tests use an in-memory H2 database; they do not require Docker.
 ## What you learned
 
 You now have a three-process setup: Postgres, Spring Boot on port **8080**, and Vite on port **5173**, with CORS allowing the browser to call the API. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.
+
+**Authentication:** Register and sign in via the UI; the API requires a JWT for note endpoints — set **`JWT_SECRET`** in the environment when running the backend (see Step 3).

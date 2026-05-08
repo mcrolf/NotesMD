@@ -3,7 +3,6 @@ package com.webclock.notes.service;
 import com.webclock.notes.dto.NoteCreateRequest;
 import com.webclock.notes.dto.NoteResponse;
 import com.webclock.notes.dto.NoteUpdateRequest;
-import com.webclock.notes.entity.LegacyOwnerIds;
 import com.webclock.notes.entity.Note;
 import com.webclock.notes.exception.ResourceNotFoundException;
 import com.webclock.notes.repository.NoteRepository;
@@ -25,17 +24,19 @@ public class NoteService {
     }
 
     @Transactional(readOnly = true)
-    public List<NoteResponse> listNewestFirst() {
-        return noteRepository.findAllByOrderByCreatedAtDesc().stream().map(NoteResponse::from).toList();
+    public List<NoteResponse> listNewestFirst(UUID ownerId) {
+        return noteRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId).stream()
+                .map(NoteResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public NoteResponse get(UUID id) {
-        return NoteResponse.from(noteOrThrow(id));
+    public NoteResponse get(UUID id, UUID ownerId) {
+        return NoteResponse.from(noteOrThrow(id, ownerId));
     }
 
     @Transactional
-    public NoteResponse create(NoteCreateRequest request) {
+    public NoteResponse create(NoteCreateRequest request, UUID ownerId) {
         Note note = new Note();
         if (request.title() != null) {
             note.setTitle(request.title());
@@ -43,13 +44,13 @@ public class NoteService {
         if (request.contentMarkdown() != null) {
             note.setContentMarkdown(request.contentMarkdown());
         }
-        note.setOwner(userRepository.getReferenceById(LegacyOwnerIds.UNOWNED_NOTES_USER_ID));
+        note.setOwner(userRepository.getReferenceById(ownerId));
         return NoteResponse.from(noteRepository.save(note));
     }
 
     @Transactional
-    public NoteResponse update(UUID id, NoteUpdateRequest request) {
-        Note note = noteOrThrow(id);
+    public NoteResponse update(UUID id, NoteUpdateRequest request, UUID ownerId) {
+        Note note = noteOrThrow(id, ownerId);
         if (request.title() != null) {
             note.setTitle(request.title());
         }
@@ -60,14 +61,16 @@ public class NoteService {
     }
 
     @Transactional
-    public void delete(UUID id) {
-        if (!noteRepository.existsById(id)) {
+    public void delete(UUID id, UUID ownerId) {
+        if (!noteRepository.findByIdAndOwnerId(id, ownerId).isPresent()) {
             throw new ResourceNotFoundException(id);
         }
-        noteRepository.deleteById(id);
+        noteRepository.deleteByIdAndOwnerId(id, ownerId);
     }
 
-    private Note noteOrThrow(UUID id) {
-        return noteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    private Note noteOrThrow(UUID id, UUID ownerId) {
+        return noteRepository
+                .findByIdAndOwnerId(id, ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 }

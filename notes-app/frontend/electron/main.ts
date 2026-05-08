@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** Vite dev server (see `npm run dev`). */
-const DEV_SERVER_URL = 'http://localhost:5174'
+const DEV_SERVER_URL = 'http://localhost:5173'
 const DEV_LOAD_RETRIES = 60
 const DEV_LOAD_INTERVAL_MS = 250
 

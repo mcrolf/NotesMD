@@ -98,7 +98,7 @@ JSON shape from the global exception handler:
 | `message` | string | Human-readable detail |
 | `fieldErrors` | object or null | Map of field name → message for validation failures |
 
-Typical status codes: **400** (validation, bad input), **404** (missing note).
+Typical status codes: **400** (validation, bad input), **401** (missing or invalid JWT on protected routes), **404** (missing note).
 
 ---
 
@@ -115,7 +115,10 @@ Typical status codes: **400** (validation, bad input), **404** (missing note).
 | `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/notes` |
 | `SPRING_DATASOURCE_USERNAME` | DB user | `notes` |
 | `SPRING_DATASOURCE_PASSWORD` | DB password | `changeme` |
-| `SPRING_JPA_HIBERNATE_DDL_AUTO` via `spring.jpa.hibernate.ddl-auto` | Schema mode | `update` |
+| `spring.jpa.hibernate.ddl-auto` | Hibernate schema mode vs DB | `validate` (Flyway owns migrations under `db/migration/`) |
+| `JWT_SECRET` → `app.jwt.secret` | HMAC key for signing JWTs (required in env for normal startup) | _empty — must be set_ |
+| `JWT_ISSUER` → `app.jwt.issuer` | JWT `iss` claim | `notes-api` |
+| `JWT_ACCESS_TOKEN_TTL` → `app.jwt.access-token-ttl` | Access token lifetime (ISO-8601 duration) | `PT1H` |
 | `CORS_ALLOWED_ORIGINS` → `app.cors.allowed-origins` | Allowed browser `Origin` values (comma-separated; include literal `null` for packaged Electron `file://` fetch) | `http://localhost:5173,null` |
 | `SERVER_PORT` | HTTP port | `8080` |
 
@@ -127,7 +130,7 @@ Typical status codes: **400** (validation, bad input), **404** (missing note).
 |----------|---------|---------------------|
 | `VITE_API_URL` | API origin for `fetch` | `http://localhost:8080` |
 
----
+Only variables prefixed with `VITE_` are exposed to client code. **Do not** put database passwords or `JWT_SECRET` in frontend env files.
 
 ## Docker Compose (`notes-app/docker-compose.yml`)
 
