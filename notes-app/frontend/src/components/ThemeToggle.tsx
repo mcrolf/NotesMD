@@ -43,7 +43,7 @@ export function ThemeToggle() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="default"
       size="icon-sm"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}

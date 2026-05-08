@@ -31,7 +31,6 @@ function AppHeader() {
           WebClock Notes
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ThemeToggle />
           {isAuthenticated ? (
             <>
               {username ? (
@@ -39,7 +38,7 @@ function AppHeader() {
                   {username}
                 </span>
               ) : null}
-              <Button type="button" variant="outline" size="sm" onClick={logout}>
+              <Button type="button" variant="default" size="sm" onClick={logout}>
                 Log out
               </Button>
             </>
@@ -53,6 +52,7 @@ function AppHeader() {
               </Button>
             </>
           )}
+          <ThemeToggle />
         </div>
       </div>
     </div>
