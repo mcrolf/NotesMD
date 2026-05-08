@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.webclock.notes.config.ApiCorsIntegrationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-08T20:19:45.320Z" hostname="MicMacM4.local" time="0.023">
+  <properties/>
+  <testcase name="preflightWithNullOrigin_reflectsElectronPackagedRenderer()" classname="com.webclock.notes.config.ApiCorsIntegrationTest" time="0.009"/>
+  <testcase name="getNotesWithNullOriginIncludesAllowOrigin()" classname="com.webclock.notes.config.ApiCorsIntegrationTest" time="0.014"/>
+  <system-out><![CDATA[2026-05-08T16:19:45.317-04:00  INFO 93520 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.webclock.notes.config.ApiCorsIntegrationTest]: ApiCorsIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-05-08T16:19:45.319-04:00  INFO 93520 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.webclock.notes.NotesApplication for test class com.webclock.notes.config.ApiCorsIntegrationTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

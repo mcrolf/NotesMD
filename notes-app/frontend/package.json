@@ -1,0 +1,83 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "electron:compile": "tsc -p tsconfig.electron.json",
+    "electron:start": "npm run electron:compile && electron .",
+    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on http://127.0.0.1:5173 && npm run electron:compile && electron .\"",
+    "electron:build": "npm run electron:compile && tsc -b && vite build --mode electron && electron-builder"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.15.0",
+    "remark-gfm": "^4.0.1",
+    "shadcn": "^4.7.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.2",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
+    "vite": "^8.0.10",
+    "wait-on": "^8.0.5"
+  },
+  "build": {
+    "appId": "com.webclock.notes",
+    "productName": "WebClock Notes",
+    "icon": "build/icon.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}
