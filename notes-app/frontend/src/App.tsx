@@ -9,6 +9,7 @@ import {
 import { StickyNote } from 'lucide-react'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { NoteDetailPage } from '@/pages/NoteDetailPage'
 import { NoteNewPage } from '@/pages/NoteNewPage'
@@ -30,6 +31,7 @@ function AppHeader() {
           WebClock Notes
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           {isAuthenticated ? (
             <>
               {username ? (
