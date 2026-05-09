@@ -1,6 +1,6 @@
 # Explanation: Architecture and data flow
 
-This document explains how the **WebClock Notes** demo is structured and why, without step-by-step commands.
+This document explains how the **NotesMD** demo is structured and why, without step-by-step commands.
 
 ---
 
@@ -12,7 +12,7 @@ Authenticated users maintain a Markdown note collection (**title + `contentMarkd
 
 ## Major components
 
-1. **React SPA (Vite)** — Routing with **React Router**: public **`/login`** and **`/register`**, authenticated area under **`ProtectedRoute`** (notes list **`/webclock-notes`**, create **`/notes/new`**, detail **`/notes/:id`**). Root **`/`** redirects into that tree. **`AuthProvider`** holds session state and supplies `Authorization` headers via the API client (`fetch`). **`VITE_API_URL`** selects the API origin. For packaged **Electron** or **`file:`** origins, **`HashRouter`** avoids path issues; otherwise **`BrowserRouter`** is used.
+1. **React SPA (Vite)** — Routing with **React Router**: public **`/login`** and **`/register`**, authenticated area under **`ProtectedRoute`** (notes list **`/notes`**, create **`/notes/new`**, detail **`/notes/:id`**). Root **`/`** redirects into that tree. **`AuthProvider`** holds session state and supplies `Authorization` headers via the API client (`fetch`). **`VITE_API_URL`** selects the API origin. For packaged **Electron** or **`file:`** origins, **`HashRouter`** avoids path issues; otherwise **`BrowserRouter`** is used.
 2. **Spring Boot API** — JSON under **`/api/auth`** (register/login) and **`/api/notes`** (CRUD). **Spring Security** is **stateless**: a **JWT** filter validates the bearer token except on the two auth routes and actuator health. **CORS** is configured for **`/api/**`** using **`CORS_ALLOWED_ORIGINS`** (including literal **`null`** for some **`file:`**/`Origin: null` clients). Input is validated; errors map to a consistent **`ErrorResponse`** JSON shape.
 3. **PostgreSQL** — Durable storage. **Flyway** applies migrations under **`db/migration/`**; Hibernate **`ddl-auto: validate`** ensures the schema matches entities.
 

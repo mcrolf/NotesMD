@@ -1,6 +1,6 @@
 # How-to: Configuration and troubleshooting
 
-Problem-oriented recipes for running and integrating the **WebClock Notes** demo.
+Problem-oriented recipes for running and integrating the **NotesMD** demo.
 
 ---
 
@@ -88,7 +88,7 @@ Usually a **wrong `VITE_API_URL`**, **CORS**, or **mixed content** (HTTPS page c
 
 ## Note requests return **401 Unauthorized**
 
-Protected routes (**`/webclock-notes`**, **`/notes/*`**) call **`/api/notes`** with a Bearer token stored after **login/register**.
+Protected routes (**`/notes`** for the list, plus **`/notes/*`** for new/detail) call **`/api/notes`** with a Bearer token stored after **login/register**.
 
 - Confirm you completed **Register** or **Sign in**; open DevTools (**Application** → **Local storage**) if you want to verify a token exists for this origin / hash route.
 - If you **changed `JWT_SECRET`** or restarted Postgres / wiped volumes, **sign in again** so the client obtains a fresh token.

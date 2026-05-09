@@ -1,5 +1,5 @@
 /** Browser path for the notes list (home). */
-export const HOME_PATH = '/webclock-notes'
+export const HOME_PATH = '/notes'
 
 export const LOGIN_PATH = '/login'
 export const REGISTER_PATH = '/register'

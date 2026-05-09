@@ -21,9 +21,9 @@ export function LoginPage() {
     (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? HOME_PATH
 
   useEffect(() => {
-    document.title = 'Sign in — WebClock'
+    document.title = 'Sign in — NotesMD'
     return () => {
-      document.title = 'WebClock Notes — WebClock'
+      document.title = 'NotesMD'
     }
   }, [])
 
@@ -51,7 +51,7 @@ export function LoginPage() {
         <CardHeader>
           <CardTitle className="font-heading text-2xl tracking-tight">Sign in</CardTitle>
           <CardDescription>
-            Use your WebClock Notes account. Username at least 3 characters; password at least 8.
+            Use your NotesMD account. Username at least 3 characters; password at least 8.
           </CardDescription>
         </CardHeader>
         <CardContent>

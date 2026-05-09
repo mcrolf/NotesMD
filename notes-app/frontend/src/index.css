@@ -49,7 +49,7 @@
 }
 
 :root {
-    /* WebClock brand: primary #09386f, surfaces #ffffff, text #2f2f2f */
+    /* NotesMD brand: primary #09386f, surfaces #ffffff, text #2f2f2f */
     --background: #ffffff;
     --foreground: #2f2f2f;
     --card: #ffffff;

@@ -20,7 +20,7 @@ app:
   jwt:
     # HS256: set JWT_SECRET in the environment for non-local use (see notes-app/.env.example). Default is for local boot only.
     secret: ${JWT_SECRET:local-dev-only-jwt-signing-key-not-for-production-use}
-    issuer: ${JWT_ISSUER:notes-api}
+    issuer: ${JWT_ISSUER:notesmd-api}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
 
   cors:

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.notesmd.notes.config.ApiCorsIntegrationTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-09T16:36:30.097Z" hostname="MicMacM4.local" time="0.13">
+  <properties/>
+  <testcase name="loginPostWithViteOriginIncludesAllowOrigin()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.115"/>
+  <testcase name="getNotesWithViteOriginIncludesAllowOrigin()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.003"/>
+  <testcase name="preflightWithNullOrigin_reflectsElectronPackagedRenderer()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.003"/>
+  <testcase name="preflightWithViteOrigin_reflectsFrontendDevServer()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.002"/>
+  <testcase name="disallowedOriginDoesNotEchoAccessControlAllowOrigin()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.003"/>
+  <testcase name="getNotesWithNullOriginIncludesAllowOrigin()" classname="com.notesmd.notes.config.ApiCorsIntegrationTest" time="0.003"/>
+  <system-out><![CDATA[2026-05-09T12:36:30.094-04:00  INFO 96834 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.notesmd.notes.config.ApiCorsIntegrationTest]: ApiCorsIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-05-09T12:36:30.096-04:00  INFO 96834 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.notesmd.notes.NotesApplication for test class com.notesmd.notes.config.ApiCorsIntegrationTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

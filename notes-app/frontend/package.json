@@ -52,8 +52,8 @@
     "wait-on": "^8.0.5"
   },
   "build": {
-    "appId": "com.webclock.notes",
-    "productName": "WebClock Notes",
+    "appId": "com.notesmd.notes",
+    "productName": "NotesMD",
     "icon": "build/icon.png",
     "directories": {
       "output": "release"

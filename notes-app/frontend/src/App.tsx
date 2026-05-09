@@ -28,7 +28,7 @@ function AppHeader() {
           className="font-heading flex items-center gap-2 text-lg font-semibold tracking-tight"
         >
           <StickyNote className="size-5 shrink-0" aria-hidden />
-          WebClock Notes
+          NotesMD
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           {isAuthenticated ? (
@@ -91,8 +91,8 @@ function AppRoutes() {
           <Route path={LOGIN_PATH} element={<LoginPage />} />
           <Route path={REGISTER_PATH} element={<RegisterPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route path={HOME_PATH} element={<NotesListPage />} />
             <Route path="/notes/new" element={<NoteNewPage />} />
+            <Route path={HOME_PATH} element={<NotesListPage />} />
             <Route path="/notes/:id" element={<NoteDetailPage />} />
           </Route>
         </Routes>

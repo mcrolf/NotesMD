@@ -17,9 +17,9 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    document.title = 'Register — WebClock'
+    document.title = 'Register — NotesMD'
     return () => {
-      document.title = 'WebClock Notes — WebClock'
+      document.title = 'NotesMD'
     }
   }, [])
 

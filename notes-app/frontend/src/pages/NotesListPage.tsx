@@ -81,11 +81,11 @@ export function NotesListPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">
-            WebClock
+            NotesMD
           </p>
           <h1 className="font-heading mt-1 text-3xl font-semibold tracking-tight">Notes</h1>
           <p className="text-muted-foreground mt-2 max-w-md text-sm leading-relaxed">
-            Markdown notes for your WebClock projects.
+            Markdown notes, saved per account and secured with your sign-in.
           </p>
         </div>
         <Button asChild className="shrink-0 gap-2">

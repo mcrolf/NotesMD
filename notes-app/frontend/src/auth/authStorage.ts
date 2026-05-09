@@ -1,7 +1,7 @@
 /** Session-scoped auth (clears when the tab closes). Access token for Bearer JWT. */
 
-const TOKEN_KEY = 'webclock_notes_access_token'
-const USERNAME_KEY = 'webclock_notes_username'
+const TOKEN_KEY = 'notesmd_access_token'
+const USERNAME_KEY = 'notesmd_username'
 
 export function getAccessToken(): string | null {
   try {
