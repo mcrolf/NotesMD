@@ -39,22 +39,21 @@ export function NotesWelcomePage() {
 
   return (
     <div className="notes-content-pane notes-content-pane-centered">
-    <Card className="empty-card">
-      <CardHeader className="empty-card-header">
-        <div className="empty-icon">
-          <FileText className="empty-icon-svg" aria-hidden />
-        </div>
-        <CardTitle className="empty-title">No notes yet</CardTitle>
-        <CardDescription>
-          Create one from the editor — the API is ready when the backend is running.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="empty-card-actions">
-        <Button asChild variant="secondary">
-          <Link to="/notes/new">Write the first note</Link>
-        </Button>
-      </CardContent>
-    </Card>
+      <div className="notes-welcome">
+      <div className="notes-welcome-icon" aria-hidden>
+        <FileText className="notes-welcome-icon-svg" />
+      </div>
+      <h1 className="notes-welcome-title">No notes yet</h1>
+      <p className="notes-welcome-description">
+        Create a new note to get started.
+      </p>
+      <Button asChild variant="secondary" className="button-with-icon">
+        <Link to="/notes/new">
+          <Plus className="icon-sm" aria-hidden />
+          New note
+        </Link>
+      </Button>
+      </div>
     </div>
   )
 }

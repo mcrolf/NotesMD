@@ -34,6 +34,10 @@ public class Note {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    // Null while active; set when the note is moved to the archive
+    @Column(name = "archived_at")
+    private Instant archivedAt;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
@@ -76,6 +80,19 @@ public class Note {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
+    }
+
+    /** True when the note has been archived (not shown in the active list). */
+    public boolean isArchived() {
+        return archivedAt != null;
     }
 
     public User getOwner() {

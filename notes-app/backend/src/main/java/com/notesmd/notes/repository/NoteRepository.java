@@ -10,6 +10,12 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
 
     List<Note> findAllByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
 
+    // Active notes only (archived_at IS NULL), newest first
+    List<Note> findAllByOwnerIdAndArchivedAtIsNullOrderByCreatedAtDesc(UUID ownerId);
+
+    // Archived notes only, most recently archived first
+    List<Note> findAllByOwnerIdAndArchivedAtIsNotNullOrderByArchivedAtDesc(UUID ownerId);
+
     Optional<Note> findByIdAndOwnerId(UUID id, UUID ownerId);
 
     void deleteByIdAndOwnerId(UUID id, UUID ownerId);

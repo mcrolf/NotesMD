@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/notes")
 public class NoteController {
 
+    // Restrict {id} to UUIDs so literal paths like /archived are not parsed as note ids.
+    private static final String NOTE_ID =
+            "{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}";
+
     private final NoteService noteService;
 
     public NoteController(NoteService noteService) {
@@ -34,7 +38,12 @@ public class NoteController {
         return noteService.listNewestFirst(currentUserId(authentication));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/archived")
+    public List<NoteResponse> listArchived(Authentication authentication) {
+        return noteService.listArchived(currentUserId(authentication));
+    }
+
+    @GetMapping("/" + NOTE_ID)
     public NoteResponse get(Authentication authentication, @PathVariable UUID id) {
         return noteService.get(id, currentUserId(authentication));
     }
@@ -45,13 +54,24 @@ public class NoteController {
         return noteService.create(request, currentUserId(authentication));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/" + NOTE_ID)
     public NoteResponse patch(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody NoteUpdateRequest request) {
         return noteService.update(id, request, currentUserId(authentication));
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/" + NOTE_ID + "/archive")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void archive(Authentication authentication, @PathVariable UUID id) {
+        noteService.archive(id, currentUserId(authentication));
+    }
+
+    @PostMapping("/" + NOTE_ID + "/restore")
+    public NoteResponse restore(Authentication authentication, @PathVariable UUID id) {
+        return noteService.restore(id, currentUserId(authentication));
+    }
+
+    @DeleteMapping("/" + NOTE_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(Authentication authentication, @PathVariable UUID id) {
         noteService.delete(id, currentUserId(authentication));

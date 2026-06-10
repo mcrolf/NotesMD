@@ -75,8 +75,153 @@ class NotesApplicationTests {
         assertThat(got.getBody()).isNotNull();
         assertThat(got.getBody().contentMarkdown()).isEqualTo("## body");
 
-        restTemplate.exchange("/api/notes/" + id, HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+        ResponseEntity<Void> archived = restTemplate.exchange(
+                "/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+        assertThat(archived.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(noteRepository.findById(id)).isPresent();
+        assertThat(noteRepository.findById(id).orElseThrow().isArchived()).isTrue();
+
+        ResponseEntity<List<NoteResponse>> activeList = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<NoteResponse>>() {});
+        assertThat(activeList.getBody()).isEmpty();
+
+        ResponseEntity<List<NoteResponse>> archivedList = restTemplate.exchange(
+                "/api/notes/archived",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<NoteResponse>>() {});
+        assertThat(archivedList.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(archivedList.getBody()).extracting(NoteResponse::id).containsExactly(id);
+        assertThat(archivedList.getBody()).extracting(NoteResponse::archivedAt).allMatch(at -> at != null);
+
+        ResponseEntity<NoteResponse> restored = restTemplate.exchange(
+                "/api/notes/" + id + "/restore", HttpMethod.POST, new HttpEntity<>(headers), NoteResponse.class);
+        assertThat(restored.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(restored.getBody()).isNotNull();
+        assertThat(restored.getBody().archivedAt()).isNull();
+
+        ResponseEntity<List<NoteResponse>> activeAgain = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<NoteResponse>>() {});
+        assertThat(activeAgain.getBody()).extracting(NoteResponse::id).containsExactly(id);
+
+        restTemplate.exchange("/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+
+        ResponseEntity<Void> deleted =
+                restTemplate.exchange("/api/notes/" + id, HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(noteRepository.findById(id)).isEmpty();
+    }
+
+    @Test
+    void archiveActiveNote_setsArchivedAtAndRemovesFromActiveList() {
+        String username = "archive-" + UUID.randomUUID();
+        String password = "password12";
+        HttpHeaders headers = authHeaders(registerAndLogin(username, password));
+
+        ResponseEntity<NoteResponse> created = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("To archive", "content"), headers),
+                NoteResponse.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(created.getBody()).isNotNull();
+        UUID id = created.getBody().id();
+
+        ResponseEntity<Void> archived = restTemplate.exchange(
+                "/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+        assertThat(archived.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<NoteResponse> got =
+                restTemplate.exchange("/api/notes/" + id, HttpMethod.GET, new HttpEntity<>(headers), NoteResponse.class);
+        assertThat(got.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(got.getBody()).isNotNull();
+        assertThat(got.getBody().archivedAt()).isNotNull();
+
+        ResponseEntity<List<NoteResponse>> activeList = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<NoteResponse>>() {});
+        assertThat(activeList.getBody()).isEmpty();
+    }
+
+    @Test
+    void patchArchivedNote_returns404() {
+        String username = "patch-archived-" + UUID.randomUUID();
+        String password = "password12";
+        HttpHeaders headers = authHeaders(registerAndLogin(username, password));
+
+        ResponseEntity<NoteResponse> created = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("Locked", "body"), headers),
+                NoteResponse.class);
+        assertThat(created.getBody()).isNotNull();
+        UUID id = created.getBody().id();
+
+        restTemplate.exchange("/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+
+        ResponseEntity<String> patched = restTemplate.exchange(
+                "/api/notes/" + id,
+                HttpMethod.PATCH,
+                new HttpEntity<>(new NoteUpdateRequest("Changed", null), headers),
+                String.class);
+        assertThat(patched.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(patched.getBody()).contains("Note not found");
+    }
+
+    @Test
+    void deleteActiveNote_returns404() {
+        String username = "delete-active-" + UUID.randomUUID();
+        String password = "password12";
+        HttpHeaders headers = authHeaders(registerAndLogin(username, password));
+
+        ResponseEntity<NoteResponse> created = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("Still active", "body"), headers),
+                NoteResponse.class);
+        assertThat(created.getBody()).isNotNull();
+        UUID id = created.getBody().id();
+
+        ResponseEntity<String> deleted = restTemplate.exchange(
+                "/api/notes/" + id, HttpMethod.DELETE, new HttpEntity<>(headers), String.class);
+        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(deleted.getBody()).contains("Note not found");
+        assertThat(noteRepository.findById(id)).isPresent();
+        assertThat(noteRepository.findById(id).orElseThrow().isArchived()).isFalse();
+    }
+
+    @Test
+    void crossTenantArchive_returns404() {
+        String password = "password12";
+        String userA = "user-a-archive-" + UUID.randomUUID();
+        String userB = "user-b-archive-" + UUID.randomUUID();
+
+        HttpHeaders headersA = authHeaders(registerAndLogin(userA, password));
+        HttpHeaders headersB = authHeaders(registerAndLogin(userB, password));
+
+        ResponseEntity<NoteResponse> created = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("Owned by A", "secret"), headersA),
+                NoteResponse.class);
+        assertThat(created.getBody()).isNotNull();
+        UUID noteId = created.getBody().id();
+
+        ResponseEntity<String> archived = restTemplate.exchange(
+                "/api/notes/" + noteId + "/archive", HttpMethod.POST, new HttpEntity<>(headersB), String.class);
+        assertThat(archived.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(archived.getBody()).contains("Note not found");
+
+        assertThat(noteRepository.findById(noteId)).isPresent();
+        assertThat(noteRepository.findById(noteId).orElseThrow().isArchived()).isFalse();
     }
 
     @Test
@@ -233,5 +378,22 @@ class NotesApplicationTests {
     void healthIsUp() {
         ResponseEntity<String> res = restTemplate.getForEntity("/actuator/health", String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    // Registers a user and returns a bearer token for authenticated API calls
+    private String registerAndLogin(String username, String password) {
+        restTemplate.postForEntity(
+                "/api/auth/register", new AuthCredentialsRequest(username, password), AuthRegisterResponse.class);
+        ResponseEntity<LoginResponse> login = restTemplate.postForEntity(
+                "/api/auth/login", new AuthCredentialsRequest(username, password), LoginResponse.class);
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(login.getBody()).isNotNull();
+        return login.getBody().accessToken();
+    }
+
+    private HttpHeaders authHeaders(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        return headers;
     }
 }

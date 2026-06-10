@@ -14,11 +14,52 @@
    * Used by: NotesSidebar
    * -------------------------------------------------------------------------- */
   .notes-sidebar {
-    @apply bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full flex-col border-b sm:h-[calc(100svh-3.25rem)] sm:w-72 sm:shrink-0 sm:min-h-0 sm:border-r sm:border-b-0;
+    @apply bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full flex-col border-b transition-[width] duration-200 ease-out sm:h-[calc(100svh-3.25rem)] sm:w-72 sm:shrink-0 sm:min-h-0 sm:border-r sm:border-b-0;
+  }
+
+  /* Narrow icon rail when collapsed=true */
+  .notes-sidebar--collapsed {
+    @apply sm:w-14;
   }
 
   .notes-sidebar-header {
-    @apply flex items-start justify-between gap-3 border-b border-sidebar-border px-4 py-4;
+    @apply flex flex-col items-stretch gap-3 border-b border-sidebar-border px-4 py-4;
+  }
+
+  .notes-sidebar-header-actions {
+    @apply flex w-full shrink-0 items-end justify-end gap-1;
+  }
+
+  /* Segmented Notes / Archive toggle below header actions */
+  .notes-sidebar-view-tabs {
+    @apply bg-muted/60 flex w-full gap-1 rounded-md p-1;
+  }
+
+  .notes-sidebar-view-tab {
+    @apply text-muted-foreground flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2 py-1.5 text-sm font-medium transition-colors outline-none;
+    @apply focus-visible:ring-3 focus-visible:ring-sidebar-ring/50;
+  }
+
+  .notes-sidebar-view-tab:hover {
+    @apply text-sidebar-foreground;
+  }
+
+  .notes-sidebar-view-tab--active {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .notes-sidebar-view-tabs--collapsed {
+    @apply flex-col gap-1 p-1;
+  }
+
+  .notes-sidebar-view-tab--collapsed {
+    @apply size-8 flex-none p-0;
+  }
+
+  /* Stacked icon controls for collapsed=true header */
+  .notes-sidebar-header--collapsed {
+    @apply flex-col items-center gap-2 px-2 py-3;
   }
 
   .notes-sidebar-kicker {
@@ -41,6 +82,12 @@
     @apply text-muted-foreground px-4 py-6 text-sm leading-relaxed;
   }
 
+  .notes-sidebar-error--collapsed,
+  .notes-sidebar-loading--collapsed,
+  .notes-sidebar-empty--collapsed {
+    @apply px-0 py-3 text-center text-xs;
+  }
+
   /* --------------------------------------------------------------------------
    * Sidebar — list, sort, and note nav links
    * Scrollable note list, sort controls, and note link buttons
@@ -55,8 +102,16 @@
     @apply min-h-0 flex-1 pr-2;
   }
 
+  .notes-sidebar-scroll--collapsed {
+    @apply min-h-0 flex-1 px-1 py-2;
+  }
+
   .notes-sidebar-list {
     @apply flex w-full min-w-0 flex-col gap-1.5;
+  }
+
+  .notes-sidebar-list--collapsed {
+    @apply items-center gap-2 p-1;
   }
 
   .notes-sidebar-list > li {
@@ -88,6 +143,15 @@
     background-color: var(--primary);
     color: var(--primary-foreground);
     font-weight: 500;
+  }
+
+  /* Single-letter note chips in collapsed=true rail */
+  .notes-sidebar-note-link--collapsed {
+    @apply size-9 min-h-9 items-center justify-center rounded-md p-0 text-center;
+  }
+
+  .notes-sidebar-note-initial {
+    @apply text-sm font-semibold leading-none;
   }
 
   .notes-sidebar-note-title {
@@ -130,7 +194,7 @@
   /* --------------------------------------------------------------------------
    * Content area layout
    * Main column beside the sidebar; constrained pane for welcome/new flows.
-   * Used by: NotesLayout, NotesWelcomePage, NoteNewPage, NoteDetailPage (errors)
+   * Used by: NotesLayout, NotesWelcomePage, NoteDetailPage (errors)
    * -------------------------------------------------------------------------- */
   .notes-content {
     @apply bg-background flex min-h-0 min-w-0 flex-1 flex-col sm:h-[calc(100svh-3.25rem)];
@@ -147,7 +211,7 @@
   /* --------------------------------------------------------------------------
    * Note detail page
    * Full-height note view/edit layout (header + scrollable body).
-   * Used by: NoteDetailPage
+   * Used by: NoteDetailPage, NoteNewPage
    * -------------------------------------------------------------------------- */
   .note-detail {
     @apply flex min-h-0 flex-1 flex-col;
@@ -193,7 +257,7 @@
   /* --------------------------------------------------------------------------
    * Note header & actions (detail + edit)
    * Title row, action buttons, and empty body placeholder.
-   * Used by: NoteDetailPage
+   * Used by: NoteDetailPage, NoteNewPage
    * -------------------------------------------------------------------------- */
   .note-header-row {
     @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;

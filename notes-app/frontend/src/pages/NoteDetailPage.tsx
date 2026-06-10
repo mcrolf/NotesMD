@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { Download, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, Download, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import {
   AlertDialog,
@@ -23,7 +23,12 @@ import { downloadNoteAsMarkdown } from '@/lib/downloadNoteMarkdown'
 export function NoteDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { updateNoteInList, removeNoteFromList } = useNotesList()
+  const {
+    updateNoteInList,
+    removeNoteFromList,
+    removeNoteFromArchivedList,
+    addNoteToArchivedList,
+  } = useNotesList()
   const editBodyRef = useRef<HTMLTextAreaElement>(null)
   const [note, setNote] = useState<NoteResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +38,14 @@ export function NoteDetailPage() {
   const [draftContent, setDraftContent] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [archiveOpen, setArchiveOpen] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [destroying, setDestroying] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [restoring, setRestoring] = useState(false)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
   const routeError = id ? error : 'Missing note id.'
   const isLoading = id ? loading : false
 
@@ -74,7 +84,7 @@ export function NoteDetailPage() {
   }, [id])
 
   function beginEdit() {
-    if (!note) return
+    if (!note || note.archivedAt) return
     setDraftTitle(note.title ?? '')
     setDraftContent(note.contentMarkdown ?? '')
     setSaveError(null)
@@ -112,13 +122,48 @@ export function NoteDetailPage() {
     }
   }
 
+  async function handleConfirmArchive() {
+    if (!id || !note) return
+    setArchiveError(null)
+    setArchiving(true)
+    try {
+      await notesApi.archive(id)
+      removeNoteFromList(id)
+      addNoteToArchivedList({ ...note, archivedAt: new Date().toISOString() })
+      setArchiveOpen(false)
+      navigate(HOME_PATH)
+    } catch (err: unknown) {
+      setArchiveError(err instanceof ApiError ? err.message : 'Could not archive note.')
+    } finally {
+      setArchiving(false)
+    }
+  }
+
+  async function handleRestore() {
+    if (!id) return
+    setRestoreError(null)
+    setRestoring(true)
+    try {
+      const restored = await notesApi.restore(id)
+      removeNoteFromArchivedList(id)
+      updateNoteInList(restored)
+      setNote(restored)
+      setDraftTitle(restored.title ?? '')
+      setDraftContent(restored.contentMarkdown ?? '')
+    } catch (err: unknown) {
+      setRestoreError(err instanceof ApiError ? err.message : 'Could not restore note.')
+    } finally {
+      setRestoring(false)
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!id) return
     setDeleteError(null)
     setDestroying(true)
     try {
       await notesApi.delete(id)
-      removeNoteFromList(id)
+      removeNoteFromArchivedList(id)
       setDeleteOpen(false)
       navigate(HOME_PATH)
     } catch (err: unknown) {
@@ -151,9 +196,11 @@ export function NoteDetailPage() {
     return null
   }
 
+  const isArchived = note.archivedAt != null
+
   return (
     <>
-      {editing ? (
+      {editing && !isArchived ? (
         <form className="note-detail" onSubmit={handleSave}>
           <header className="note-detail-header">
             <div className="note-header-row">
@@ -221,7 +268,7 @@ export function NoteDetailPage() {
           </div>
         </form>
       ) : (
-        <article className="note-detail">
+        <article className={`note-detail${isArchived ? ' note-detail--archived' : ''}`}>
           <header className="note-detail-header">
             <div className="note-header-row">
               <h1 className="note-title">
@@ -238,30 +285,82 @@ export function NoteDetailPage() {
                   <Download className="icon-xs" aria-hidden />
                   Download
                 </Button>
-                <Button type="button" variant="outline" size="sm" className="button-with-icon" onClick={beginEdit}>
-                  <Pencil className="icon-xs" aria-hidden />
-                  Edit
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="button-with-icon"
-                  onClick={() => {
-                    setDeleteError(null)
-                    setDeleteOpen(true)
-                  }}
-                >
-                  <Trash2 className="icon-xs" aria-hidden />
-                  Delete
-                </Button>
+                {isArchived ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="button-with-icon"
+                      disabled={restoring}
+                      onClick={handleRestore}
+                    >
+                      {restoring ? (
+                        <>
+                          <Loader2 className="spinner-icon" aria-hidden />
+                          Restoring…
+                        </>
+                      ) : (
+                        <>
+                          <ArchiveRestore className="icon-xs" aria-hidden />
+                          Restore
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="button-with-icon"
+                      disabled={restoring}
+                      onClick={() => {
+                        setDeleteError(null)
+                        setDeleteOpen(true)
+                      }}
+                    >
+                      <Trash2 className="icon-xs" aria-hidden />
+                      Delete
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="button" variant="outline" size="sm" className="button-with-icon" onClick={beginEdit}>
+                      <Pencil className="icon-xs" aria-hidden />
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="button-with-icon"
+                      onClick={() => {
+                        setArchiveError(null)
+                        setArchiveOpen(true)
+                      }}
+                    >
+                      <Archive className="icon-xs" aria-hidden />
+                      Archive
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             <p className="note-detail-meta">
+              {isArchived ? (
+                <>
+                  Archived {new Date(note.archivedAt!).toLocaleString()}
+                  <span className="metadata-separator">·</span>
+                </>
+              ) : null}
               Updated {new Date(note.updatedAt).toLocaleString()}
               <span className="metadata-separator">·</span>
               <code className="metadata-code">{note.id}</code>
             </p>
+            {restoreError ? (
+              <p className="error-text" role="alert">
+                {restoreError}
+              </p>
+            ) : null}
             {saveError ? (
               <p className="error-text" role="alert">
                 {saveError}
@@ -278,13 +377,49 @@ export function NoteDetailPage() {
         </article>
       )}
 
+      <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive this note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Move &ldquo;{note.title?.trim() ? note.title : 'Untitled'}&rdquo; to the archive? You can restore it
+              later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {archiveError ? (
+            <p className="error-text" role="alert">
+              {archiveError}
+            </p>
+          ) : null}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiving}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="default"
+              disabled={archiving}
+              className="button-with-icon"
+              onClick={handleConfirmArchive}
+            >
+              {archiving ? (
+                <>
+                  <Loader2 className="spinner-icon" aria-hidden />
+                  Archiving…
+                </>
+              ) : (
+                'Archive'
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this note permanently?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes &ldquo;{note?.title?.trim() ? note.title : 'Untitled'}&rdquo; permanently. This action
-              cannot be undone.
+              This removes &ldquo;{note.title?.trim() ? note.title : 'Untitled'}&rdquo; permanently. This cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError ? (

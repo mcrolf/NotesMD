@@ -7,6 +7,7 @@ import com.notesmd.notes.entity.Note;
 import com.notesmd.notes.exception.ResourceNotFoundException;
 import com.notesmd.notes.repository.NoteRepository;
 import com.notesmd.notes.repository.UserRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,14 @@ public class NoteService {
 
     @Transactional(readOnly = true)
     public List<NoteResponse> listNewestFirst(UUID ownerId) {
-        return noteRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId).stream()
+        return noteRepository.findAllByOwnerIdAndArchivedAtIsNullOrderByCreatedAtDesc(ownerId).stream()
+                .map(NoteResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NoteResponse> listArchived(UUID ownerId) {
+        return noteRepository.findAllByOwnerIdAndArchivedAtIsNotNullOrderByArchivedAtDesc(ownerId).stream()
                 .map(NoteResponse::from)
                 .toList();
     }
@@ -50,7 +58,7 @@ public class NoteService {
 
     @Transactional
     public NoteResponse update(UUID id, NoteUpdateRequest request, UUID ownerId) {
-        Note note = noteOrThrow(id, ownerId);
+        Note note = activeNoteOrThrow(id, ownerId);
         if (request.title() != null) {
             note.setTitle(request.title());
         }
@@ -61,11 +69,37 @@ public class NoteService {
     }
 
     @Transactional
+    public void archive(UUID id, UUID ownerId) {
+        Note note = activeNoteOrThrow(id, ownerId);
+        note.setArchivedAt(Instant.now());
+        noteRepository.save(note);
+    }
+
+    @Transactional
+    public NoteResponse restore(UUID id, UUID ownerId) {
+        Note note = noteOrThrow(id, ownerId);
+        if (!note.isArchived()) {
+            throw new ResourceNotFoundException(id);
+        }
+        note.setArchivedAt(null);
+        return NoteResponse.from(noteRepository.save(note));
+    }
+
+    @Transactional
     public void delete(UUID id, UUID ownerId) {
-        if (!noteRepository.findByIdAndOwnerId(id, ownerId).isPresent()) {
+        Note note = noteOrThrow(id, ownerId);
+        if (!note.isArchived()) {
             throw new ResourceNotFoundException(id);
         }
         noteRepository.deleteByIdAndOwnerId(id, ownerId);
+    }
+
+    private Note activeNoteOrThrow(UUID id, UUID ownerId) {
+        Note note = noteOrThrow(id, ownerId);
+        if (note.isArchived()) {
+            throw new ResourceNotFoundException(id);
+        }
+        return note;
     }
 
     private Note noteOrThrow(UUID id, UUID ownerId) {

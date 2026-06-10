@@ -8,6 +8,8 @@ export type NoteResponse = {
   contentMarkdown: string
   createdAt: string
   updatedAt: string
+  /** ISO timestamp when archived; null while the note is active */
+  archivedAt: string | null
 }
 
 export type NoteCreateRequest = {
@@ -109,6 +111,11 @@ export const notesApi = {
     return apiFetch<NoteResponse[]>('/api/notes')
   },
 
+  /** Archived notes only, most recently archived first */
+  listArchived(): Promise<NoteResponse[]> {
+    return apiFetch<NoteResponse[]>('/api/notes/archived')
+  },
+
   get(id: string): Promise<NoteResponse> {
     return apiFetch<NoteResponse>(`/api/notes/${encodeURIComponent(id)}`)
   },
@@ -127,6 +134,21 @@ export const notesApi = {
     })
   },
 
+  /** Soft-archive an active note (204) */
+  archive(id: string): Promise<void> {
+    return apiFetch<void>(`/api/notes/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+    })
+  },
+
+  /** Restore an archived note back to the active list */
+  restore(id: string): Promise<NoteResponse> {
+    return apiFetch<NoteResponse>(`/api/notes/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+    })
+  },
+
+  /** Permanent delete — only allowed for archived notes */
   delete(id: string): Promise<void> {
     return apiFetch<void>(`/api/notes/${encodeURIComponent(id)}`, {
       method: 'DELETE',
