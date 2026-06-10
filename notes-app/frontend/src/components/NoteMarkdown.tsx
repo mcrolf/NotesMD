@@ -9,60 +9,57 @@ type NoteMarkdownProps = {
 
 const markdownComponents: Components = {
   h1: ({ children, ...props }) => (
-    <h1 className="font-heading mt-6 mb-3 text-2xl font-semibold tracking-tight first:mt-0" {...props}>
+    <h1 className="note-markdown-h1" {...props}>
       {children}
     </h1>
   ),
   h2: ({ children, ...props }) => (
-    <h2 className="font-heading mt-5 mb-2 text-xl font-semibold tracking-tight first:mt-0" {...props}>
+    <h2 className="note-markdown-h2" {...props}>
       {children}
     </h2>
   ),
   h3: ({ children, ...props }) => (
-    <h3 className="font-heading mt-4 mb-2 text-lg font-semibold tracking-tight first:mt-0" {...props}>
+    <h3 className="note-markdown-h3" {...props}>
       {children}
     </h3>
   ),
   h4: ({ children, ...props }) => (
-    <h4 className="font-heading mt-3 mb-1.5 text-base font-semibold tracking-tight first:mt-0" {...props}>
+    <h4 className="note-markdown-h4" {...props}>
       {children}
     </h4>
   ),
   h5: ({ children, ...props }) => (
-    <h5 className="mt-3 mb-1 text-sm font-semibold tracking-tight first:mt-0" {...props}>
+    <h5 className="note-markdown-h5" {...props}>
       {children}
     </h5>
   ),
   h6: ({ children, ...props }) => (
-    <h6 className="text-muted-foreground mt-3 mb-1 text-sm font-semibold tracking-tight first:mt-0" {...props}>
+    <h6 className="note-markdown-h6" {...props}>
       {children}
     </h6>
   ),
   p: ({ children, ...props }) => (
-    <p className="mb-3 text-sm leading-relaxed last:mb-0" {...props}>
+    <p className="note-markdown-p" {...props}>
       {children}
     </p>
   ),
   ul: ({ children, ...props }) => (
-    <ul className="mb-3 list-disc space-y-1 pl-6 text-sm leading-relaxed last:mb-0" {...props}>
+    <ul className="note-markdown-ul" {...props}>
       {children}
     </ul>
   ),
   ol: ({ children, ...props }) => (
-    <ol className="mb-3 list-decimal space-y-1 pl-6 text-sm leading-relaxed last:mb-0" {...props}>
+    <ol className="note-markdown-ol" {...props}>
       {children}
     </ol>
   ),
   li: ({ children, ...props }) => (
-    <li className="[&>p]:mb-1 [&>p:last-child]:mb-0" {...props}>
+    <li className="note-markdown-li" {...props}>
       {children}
     </li>
   ),
   blockquote: ({ children, ...props }) => (
-    <blockquote
-      className="border-border text-muted-foreground [&_p]:text-muted-foreground mb-3 border-l-2 py-0.5 pl-4 text-sm italic last:mb-0"
-      {...props}
-    >
+    <blockquote className="note-markdown-blockquote" {...props}>
       {children}
     </blockquote>
   ),
@@ -72,7 +69,7 @@ const markdownComponents: Components = {
     return (
       <a
         href={href}
-        className="text-primary decoration-primary/40 font-medium underline underline-offset-4 hover:decoration-primary"
+        className="note-markdown-link"
         {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : { rel: undefined })}
         {...props}
       >
@@ -80,14 +77,14 @@ const markdownComponents: Components = {
       </a>
     )
   },
-  hr: ({ ...props }) => <hr className="border-border my-6" {...props} />,
+  hr: ({ ...props }) => <hr className="note-markdown-hr" {...props} />,
   strong: ({ children, ...props }) => (
-    <strong className="font-semibold" {...props}>
+    <strong className="note-markdown-strong" {...props}>
       {children}
     </strong>
   ),
   em: ({ children, ...props }) => (
-    <em className="italic" {...props}>
+    <em className="note-markdown-em" {...props}>
       {children}
     </em>
   ),
@@ -97,9 +94,7 @@ const markdownComponents: Components = {
       <code
         {...props}
         className={cn(
-          isBlock
-            ? 'font-mono text-[0.8125rem] leading-relaxed'
-            : 'bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-[0.8125rem]',
+          isBlock ? 'note-markdown-code-block' : 'note-markdown-code',
           className,
         )}
       >
@@ -108,30 +103,27 @@ const markdownComponents: Components = {
     )
   },
   pre: ({ children, ...props }) => (
-    <pre
-      {...props}
-      className="bg-muted/80 border-border mb-3 max-h-[min(24rem,50svh)] overflow-x-auto rounded-lg border p-3 text-sm last:mb-0"
-    >
+    <pre {...props} className="note-markdown-pre">
       {children}
     </pre>
   ),
   table: ({ children, ...props }) => (
-    <div className="mb-3 max-w-full overflow-x-auto last:mb-0">
-      <table className="border-border w-full min-w-[16rem] border-collapse border text-sm" {...props}>
+    <div className="note-markdown-table-wrap">
+      <table className="note-markdown-table" {...props}>
         {children}
       </table>
     </div>
   ),
-  thead: ({ children, ...props }) => <thead className="bg-muted/50" {...props}>{children}</thead>,
+  thead: ({ children, ...props }) => <thead className="note-markdown-thead" {...props}>{children}</thead>,
   tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
-  tr: ({ children, ...props }) => <tr className="border-border border-b last:border-0" {...props}>{children}</tr>,
+  tr: ({ children, ...props }) => <tr className="note-markdown-tr" {...props}>{children}</tr>,
   th: ({ children, ...props }) => (
-    <th className="border-border border px-2 py-2 text-left text-xs font-semibold tracking-wide uppercase" {...props}>
+    <th className="note-markdown-th" {...props}>
       {children}
     </th>
   ),
   td: ({ children, ...props }) => (
-    <td className="border-border border px-2 py-1.5 align-top" {...props}>
+    <td className="note-markdown-td" {...props}>
       {children}
     </td>
   ),
@@ -139,7 +131,7 @@ const markdownComponents: Components = {
     <img
       src={src}
       alt={alt ?? ''}
-      className="border-border my-3 h-auto max-w-full rounded-md border"
+      className="note-markdown-img"
       {...props}
     />
   ),
@@ -147,7 +139,7 @@ const markdownComponents: Components = {
 
 export function NoteMarkdown({ markdown, className }: NoteMarkdownProps) {
   return (
-    <div className={cn('text-foreground [&_a]:break-all [&_code]:break-words [&_pre_code]:break-normal', className)}>
+    <div className={cn('note-markdown', className)}>
       <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {markdown}
       </Markdown>

@@ -13,30 +13,32 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { NoteDetailPage } from '@/pages/NoteDetailPage'
 import { NoteNewPage } from '@/pages/NoteNewPage'
-import { NotesListPage } from '@/pages/NotesListPage'
+import { NotesLayout } from '@/pages/NotesLayout'
+import { NotesWelcomePage } from '@/pages/NotesWelcomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
-import { HOME_PATH, LOGIN_PATH, REGISTER_PATH, shouldUseHashRouter } from '@/routes'
+import {
+  HOME_PATH,
+  LEGACY_HOME_PATH,
+  LOGIN_PATH,
+  REGISTER_PATH,
+  shouldUseHashRouter,
+} from '@/routes'
 
 function AppHeader() {
   const { isAuthenticated, username, logout } = useAuth()
   return (
-    <div className="border-border/60 bg-card/40 border-b backdrop-blur-sm">
-      <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link
-          to={HOME_PATH}
-          className="font-heading flex items-center gap-2 text-lg font-semibold tracking-tight"
-        >
-          <StickyNote className="size-5 shrink-0" aria-hidden />
+    <div className="app-header">
+      <div className="app-header-inner">
+        <Link to={HOME_PATH} className="app-brand">
+          <StickyNote className="app-brand-icon" aria-hidden />
           NotesMD
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="app-actions">
           {isAuthenticated ? (
             <>
               {username ? (
-                <span className="text-muted-foreground hidden max-w-[10rem] truncate text-sm sm:inline">
-                  {username}
-                </span>
+                <span className="app-username">{username}</span>
               ) : null}
               <Button type="button" variant="default" size="sm" onClick={logout}>
                 Log out
@@ -64,7 +66,7 @@ function SkipLink() {
   return (
     <a
       href={hashRouting ? '#' : '#main'}
-      className="focus:bg-primary focus:text-primary-foreground sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:px-3 focus:py-2"
+      className="skip-link"
       onClick={
         hashRouting
           ? (e) => {
@@ -85,15 +87,18 @@ function AppRoutes() {
     <>
       <SkipLink />
       <AppHeader />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 sm:px-6">
+      <main id="main" tabIndex={-1} className="app-main">
         <Routes>
           <Route path="/" element={<Navigate to={HOME_PATH} replace />} />
+          <Route path={LEGACY_HOME_PATH} element={<Navigate to={HOME_PATH} replace />} />
           <Route path={LOGIN_PATH} element={<LoginPage />} />
           <Route path={REGISTER_PATH} element={<RegisterPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/notes/new" element={<NoteNewPage />} />
-            <Route path={HOME_PATH} element={<NotesListPage />} />
-            <Route path="/notes/:id" element={<NoteDetailPage />} />
+            <Route path="/notes" element={<NotesLayout />}>
+              <Route index element={<NotesWelcomePage />} />
+              <Route path="new" element={<NoteNewPage />} />
+              <Route path=":id" element={<NoteDetailPage />} />
+            </Route>
           </Route>
         </Routes>
       </main>
@@ -107,7 +112,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="bg-background min-h-svh">
+        <div className="app-shell">
           <AppRoutes />
         </div>
       </AuthProvider>

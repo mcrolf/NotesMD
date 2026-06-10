@@ -1,0 +1,349 @@
+@layer components {
+  /* --------------------------------------------------------------------------
+   * Workspace layout
+   * Shell for the notes app: sidebar + main content column.
+   * Used by: NotesLayout
+   * -------------------------------------------------------------------------- */
+  .notes-workspace {
+    @apply flex min-h-[calc(100svh-3.25rem)] flex-col sm:flex-row;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Sidebar — shell & header
+   * Left column container, branding, and status messages.
+   * Used by: NotesSidebar
+   * -------------------------------------------------------------------------- */
+  .notes-sidebar {
+    @apply bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full flex-col border-b sm:h-[calc(100svh-3.25rem)] sm:w-72 sm:shrink-0 sm:min-h-0 sm:border-r sm:border-b-0;
+  }
+
+  .notes-sidebar-header {
+    @apply flex items-start justify-between gap-3 border-b border-sidebar-border px-4 py-4;
+  }
+
+  .notes-sidebar-kicker {
+    @apply text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase;
+  }
+
+  .notes-sidebar-title {
+    @apply font-heading mt-1 text-lg font-semibold tracking-tight;
+  }
+
+  .notes-sidebar-error {
+    @apply text-destructive px-4 py-3 text-sm;
+  }
+
+  .notes-sidebar-loading {
+    @apply text-muted-foreground px-4 py-3 text-sm;
+  }
+
+  .notes-sidebar-empty {
+    @apply text-muted-foreground px-4 py-6 text-sm leading-relaxed;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Sidebar — list, sort, and note nav links
+   * Scrollable note list, sort controls, and note link buttons
+   * (notes-sidebar-note-link, --active, -title, -meta).
+   * Used by: NotesSidebar
+   * -------------------------------------------------------------------------- */
+  .notes-sidebar-list-wrap {
+    @apply flex min-h-0 flex-1 flex-col gap-3 px-4 py-3;
+  }
+
+  .notes-sidebar-scroll {
+    @apply min-h-0 flex-1 pr-2;
+  }
+
+  .notes-sidebar-list {
+    @apply flex w-full min-w-0 flex-col gap-1.5;
+  }
+
+  .notes-sidebar-list > li {
+    @apply min-w-0 w-full;
+  }
+
+  /* ScrollArea viewport uses an inner sizing wrapper; keep list width for truncation. */
+  .notes-sidebar-scroll [data-slot='scroll-area-viewport'] > div {
+    @apply !block min-w-full;
+  }
+
+  /* Sidebar note nav: plain anchor styles (avoid shadcn Button color overrides). */
+  .notes-sidebar-note-link {
+    @apply flex min-h-9 min-w-0 w-full flex-col items-stretch justify-center gap-0.5 rounded-md px-3 py-1.5 text-left text-sm no-underline outline-none transition-colors;
+    @apply focus-visible:ring-3 focus-visible:ring-sidebar-ring/50;
+    border: 1px solid var(--sidebar-border);
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-foreground);
+  }
+
+  .notes-sidebar-note-link:hover {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+  }
+
+  .notes-sidebar-note-link--active,
+  .notes-sidebar-note-link--active:hover {
+    border-color: color-mix(in srgb, var(--primary) 65%, var(--sidebar-border));
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 500;
+  }
+
+  .notes-sidebar-note-title {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    line-height: 1.35;
+    color: inherit;
+  }
+
+  .notes-sidebar-note-meta {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    opacity: 0.72;
+    color: inherit;
+  }
+
+  .notes-sort-row {
+    @apply flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .notes-sort-label {
+    @apply text-muted-foreground text-sm font-medium;
+  }
+
+  .notes-sort-select {
+    @apply h-8 w-full min-w-[12rem] rounded-sm border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:w-auto dark:bg-input/30;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Content area layout
+   * Main column beside the sidebar; constrained pane for welcome/new flows.
+   * Used by: NotesLayout, NotesWelcomePage, NoteNewPage, NoteDetailPage (errors)
+   * -------------------------------------------------------------------------- */
+  .notes-content {
+    @apply bg-background flex min-h-0 min-w-0 flex-1 flex-col sm:h-[calc(100svh-3.25rem)];
+  }
+
+  .notes-content-pane {
+    @apply mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8;
+  }
+
+  .notes-content-pane-centered {
+    @apply min-h-0 flex-1 items-center justify-center;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Note detail page
+   * Full-height note view/edit layout (header + scrollable body).
+   * Used by: NoteDetailPage
+   * -------------------------------------------------------------------------- */
+  .note-detail {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .note-detail-header {
+    @apply shrink-0 space-y-3 border-b border-border px-4 py-4 sm:px-6 sm:py-5;
+  }
+
+  .note-detail-meta {
+    @apply text-muted-foreground text-sm;
+  }
+
+  .note-detail-body {
+    @apply min-h-0 flex-1 overflow-auto px-4 py-5 sm:px-6 sm:py-6;
+  }
+
+  .note-detail-body-edit {
+    @apply flex flex-col overflow-hidden;
+  }
+
+  .note-detail-body .section-heading-row {
+    @apply shrink-0;
+  }
+
+  .note-detail-editor {
+    @apply min-h-0 flex-1 resize-none font-mono text-sm;
+    field-sizing: fixed;
+  }
+
+  .note-detail-error {
+    @apply border-destructive/40 rounded-lg border px-4 py-3;
+  }
+
+  .note-detail-error-title {
+    @apply text-destructive text-sm font-medium;
+  }
+
+  .note-detail-error-message {
+    @apply text-muted-foreground mt-1 text-sm;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Note header & actions (detail + edit)
+   * Title row, action buttons, and empty body placeholder.
+   * Used by: NoteDetailPage
+   * -------------------------------------------------------------------------- */
+  .note-header-row {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;
+  }
+
+  .note-title-field-wrap {
+    @apply w-full min-w-0 space-y-3;
+  }
+
+  .note-actions {
+    @apply flex shrink-0 flex-wrap gap-2 sm:justify-end;
+  }
+
+  .note-title {
+    @apply font-heading pr-4 text-2xl tracking-tight;
+  }
+
+  .blank-note {
+    @apply text-muted-foreground text-sm;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Welcome & empty states
+   * Centered prompts when no note is selected or the account has no notes.
+   * Used by: NotesWelcomePage
+   * -------------------------------------------------------------------------- */
+  .notes-welcome {
+    @apply flex flex-col items-center justify-center gap-4 py-12 text-center;
+  }
+
+  .notes-welcome-icon {
+    @apply bg-muted flex size-14 items-center justify-center rounded-full;
+  }
+
+  .notes-welcome-icon-svg {
+    @apply text-muted-foreground size-7;
+  }
+
+  .notes-welcome-title {
+    @apply font-heading text-2xl font-semibold tracking-tight;
+  }
+
+  .notes-welcome-description {
+    @apply text-muted-foreground max-w-sm text-sm leading-relaxed;
+  }
+
+  .empty-card {
+    @apply border-dashed;
+  }
+
+  .empty-card-header {
+    @apply items-center text-center;
+  }
+
+  .empty-icon {
+    @apply bg-muted mb-2 flex size-12 items-center justify-center rounded-full;
+  }
+
+  .empty-icon-svg {
+    @apply text-muted-foreground size-6;
+  }
+
+  .empty-title {
+    @apply text-lg;
+  }
+
+  .empty-card-actions {
+    @apply flex justify-center pb-6;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Error card (legacy)
+   * Card-based error styling; prefer note-detail-error for detail flows.
+   * Used by: none (retained for Card error patterns)
+   * -------------------------------------------------------------------------- */
+  .error-card {
+    @apply border-destructive/40;
+  }
+
+  .error-card-title {
+    @apply text-destructive text-base;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Notes list layout (legacy)
+   * Full-page list styles from the pre-sidebar layout.
+   * Used by: none (retained if list UI is reused outside the sidebar)
+   * -------------------------------------------------------------------------- */
+  .notes-list-section {
+    @apply flex flex-col gap-3;
+  }
+
+  .notes-list-scroll {
+    @apply h-[min(28rem,calc(100svh-12rem))] pr-3;
+  }
+
+  .notes-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .notes-list-row {
+    @apply flex items-stretch gap-2;
+  }
+
+  .notes-list-button {
+    @apply h-auto min-w-0 flex-1 justify-start px-4 py-3 text-left font-normal;
+  }
+
+  /* --------------------------------------------------------------------------
+   * Markdown hints menu
+   * Popover menu for inserting markdown snippets into editors.
+   * Used by: MarkdownHintsButton
+   * -------------------------------------------------------------------------- */
+  .markdown-hints-anchor {
+    @apply relative;
+  }
+
+  .markdown-hints-menu {
+    @apply bg-popover text-popover-foreground fixed z-50 overflow-y-auto rounded-lg border shadow-lg;
+  }
+
+  .markdown-hints-header {
+    @apply border-b px-3 py-2;
+  }
+
+  .markdown-hints-title {
+    @apply text-xs font-medium tracking-wide uppercase;
+  }
+
+  .markdown-hints-list {
+    @apply grid gap-1 p-1;
+  }
+
+  .markdown-hints-item {
+    @apply hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left outline-none focus-visible:ring-2;
+  }
+
+  .markdown-hints-token {
+    @apply bg-muted text-muted-foreground mt-0.5 rounded px-1.5 py-0.5 font-mono text-[0.7rem];
+  }
+
+  .markdown-hints-label {
+    @apply min-w-0 text-sm font-medium;
+  }
+
+  .markdown-hints-chevron {
+    @apply size-3.5 transition-transform;
+  }
+
+  .markdown-hints-chevron-open {
+    @apply rotate-180;
+  }
+}

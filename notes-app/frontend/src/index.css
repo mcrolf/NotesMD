@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "./css/layout.css";
+@import "./css/forms.css";
+@import "./css/notes.css";
+@import "./css/markdown.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -56,19 +60,19 @@
     --card-foreground: #2f2f2f;
     --popover: #ffffff;
     --popover-foreground: #2f2f2f;
-    --primary: #09386f;
+    --primary: #0d62c4;
     --primary-foreground: #ffffff;
     --secondary: #f0f4f8;
     --secondary-foreground: #2f2f2f;
     --muted: #f0f4f8;
     --muted-foreground: #5a6570;
     --accent: #e8eef5;
-    --accent-foreground: #09386f;
+    --accent-foreground: #0d62c4;
     --destructive: #e7000b;
     --border: #d8e0ea;
     --input: #d8e0ea;
     --ring: color-mix(in srgb, var(--primary) 42%, transparent);
-    --chart-1: #09386f;
+    --chart-1: #0d62c4;
     --chart-2: #5a6570;
     --chart-3: #3d4f63;
     --chart-4: #2c5282;
@@ -76,10 +80,10 @@
     --radius: 0.625rem;
     --sidebar: #ffffff;
     --sidebar-foreground: #2f2f2f;
-    --sidebar-primary: #09386f;
+    --sidebar-primary: #0d62c4;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #f0f4f8;
-    --sidebar-accent-foreground: #09386f;
+    --sidebar-accent-foreground: #0d62c4;
     --sidebar-border: #d8e0ea;
     --sidebar-ring: color-mix(in srgb, var(--primary) 42%, transparent);
 }

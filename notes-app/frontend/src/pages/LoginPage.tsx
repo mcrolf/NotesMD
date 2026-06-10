@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { HOME_PATH, REGISTER_PATH } from '@/routes'
+import { REGISTER_PATH, resolvePostLoginPath } from '@/routes'
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
@@ -17,8 +17,9 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const redirectTo =
-    (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? HOME_PATH
+  const redirectTo = resolvePostLoginPath(
+    (location.state as { from?: { pathname: string } } | null)?.from?.pathname,
+  )
 
   useEffect(() => {
     document.title = 'Sign in — NotesMD'
@@ -46,23 +47,23 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-8 py-12">
+    <div className="page-shell-narrow">
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-2xl tracking-tight">Sign in</CardTitle>
+          <CardTitle className="card-title-lg">Sign in</CardTitle>
           <CardDescription>
             Use your NotesMD account. Username at least 3 characters; password at least 8.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <form className="form-stack" onSubmit={handleSubmit}>
             {error ? (
-              <p className="text-destructive text-sm" role="alert">
+              <p className="error-text" role="alert">
                 {error}
               </p>
             ) : null}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="login-username">
+            <div className="form-field">
+              <label className="form-label" htmlFor="login-username">
                 Username
               </label>
               <Input
@@ -77,8 +78,8 @@ export function LoginPage() {
                 disabled={submitting}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="login-password">
+            <div className="form-field">
+              <label className="form-label" htmlFor="login-password">
                 Password
               </label>
               <Input
@@ -94,19 +95,19 @@ export function LoginPage() {
                 disabled={submitting}
               />
             </div>
-            <Button type="submit" disabled={submitting} className="gap-2">
+            <Button type="submit" disabled={submitting} className="button-with-icon">
               {submitting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  <Loader2 className="spinner-icon" aria-hidden />
                   Signing in…
                 </>
               ) : (
                 'Sign in'
               )}
             </Button>
-            <p className="text-muted-foreground text-center text-sm">
+            <p className="auth-footer">
               No account?{' '}
-              <Link className="text-primary font-medium underline-offset-4 hover:underline" to={REGISTER_PATH}>
+              <Link className="text-link" to={REGISTER_PATH}>
                 Register
               </Link>
             </p>

@@ -42,24 +42,24 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-8 py-12">
+    <div className="page-shell-narrow">
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-2xl tracking-tight">Create an account</CardTitle>
+          <CardTitle className="card-title-lg">Create an account</CardTitle>
           <CardDescription>
             Choose a username (3–255 characters) and password (8–128 characters). You will be signed in
             after registration.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <form className="form-stack" onSubmit={handleSubmit}>
             {error ? (
-              <p className="text-destructive text-sm" role="alert">
+              <p className="error-text" role="alert">
                 {error}
               </p>
             ) : null}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="register-username">
+            <div className="form-field">
+              <label className="form-label" htmlFor="register-username">
                 Username
               </label>
               <Input
@@ -74,8 +74,8 @@ export function RegisterPage() {
                 disabled={submitting}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="register-password">
+            <div className="form-field">
+              <label className="form-label" htmlFor="register-password">
                 Password
               </label>
               <Input
@@ -91,19 +91,19 @@ export function RegisterPage() {
                 disabled={submitting}
               />
             </div>
-            <Button type="submit" disabled={submitting} className="gap-2">
+            <Button type="submit" disabled={submitting} className="button-with-icon">
               {submitting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  <Loader2 className="spinner-icon" aria-hidden />
                   Creating account…
                 </>
               ) : (
                 'Create account'
               )}
             </Button>
-            <p className="text-muted-foreground text-center text-sm">
+            <p className="auth-footer">
               Already have an account?{' '}
-              <Link className="text-primary font-medium underline-offset-4 hover:underline" to={LOGIN_PATH}>
+              <Link className="text-link" to={LOGIN_PATH}>
                 Sign in
               </Link>
             </p>
