@@ -102,6 +102,36 @@ class ApiCorsIntegrationTest {
     }
 
     @Test
+    void getActuatorHealthWithViteOriginIncludesAllowOrigin() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ORIGIN, FRONTEND_VITE_ORIGIN);
+
+        ResponseEntity<String> res = restTemplate.exchange(
+                "/actuator/health", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(res.getBody()).contains("\"status\":\"UP\"");
+        assertThat(res.getHeaders().get(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                .containsExactly(FRONTEND_VITE_ORIGIN);
+    }
+
+    @Test
+    void preflightActuatorHealthWithViteOrigin_reflectsFrontendDevServer() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ORIGIN, FRONTEND_VITE_ORIGIN);
+        headers.add(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET");
+
+        ResponseEntity<Void> res = restTemplate.exchange(
+                "/actuator/health", HttpMethod.OPTIONS, new HttpEntity<>(headers), Void.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(res.getHeaders().get(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                .containsExactly(FRONTEND_VITE_ORIGIN);
+        assertThat(res.getHeaders().getAccessControlAllowMethods())
+                .anyMatch(ms -> ms.name().contains("GET"));
+    }
+
+    @Test
     void disallowedOriginDoesNotEchoAccessControlAllowOrigin() {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ORIGIN, "https://untrusted.example");

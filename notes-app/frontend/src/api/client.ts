@@ -1,5 +1,6 @@
-/** MN 260506 Notes REST API client; base URL from `VITE_API_URL` or `http://localhost:8080`. */
+/** MN 260506 Notes REST API client; base URL from runtime config or build default. */
 
+import { getApiBaseUrl } from '@/api/apiConfig'
 import { getAccessToken } from '@/auth/authStorage'
 
 export type NoteResponse = {
@@ -48,15 +49,8 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler
 }
 
-function apiBaseUrl(): string {
-  const raw = import.meta.env.VITE_API_URL
-  const trimmed = typeof raw === 'string' ? raw.trim() : ''
-  if (trimmed.length > 0) return trimmed.replace(/\/$/, '')
-  return 'http://localhost:8080'
-}
-
 function joinUrl(path: string): string {
-  const base = apiBaseUrl()
+  const base = getApiBaseUrl()
   const p = path.startsWith('/') ? path : `/${path}`
   return `${base}${p}`
 }
@@ -191,4 +185,4 @@ export const authApi = {
   },
 }
 
-export { apiBaseUrl }
+export { getApiBaseUrl as apiBaseUrl }

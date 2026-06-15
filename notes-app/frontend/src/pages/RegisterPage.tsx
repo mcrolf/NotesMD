@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import { ApiError } from '@/api/client'
+import { getApiBaseUrl, setApiBaseUrl } from '@/api/apiConfig'
+import { assertApiHealth } from '@/api/apiHealth'
 import { useAuth } from '@/auth/AuthContext'
+import { formatAuthError } from '@/auth/formatAuthError'
+import { ServerUrlField } from '@/components/ServerUrlField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,9 +14,11 @@ import { HOME_PATH, LOGIN_PATH } from '@/routes'
 export function RegisterPage() {
   const { register, isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [serverUrl, setServerUrl] = useState(() => getApiBaseUrl())
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showUrlValidation, setShowUrlValidation] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -30,12 +35,16 @@ export function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setShowUrlValidation(true)
     setSubmitting(true)
     try {
+      const baseUrl = setApiBaseUrl(serverUrl)
+      setServerUrl(baseUrl)
+      await assertApiHealth(baseUrl)
       await register(username.trim(), password)
       navigate(HOME_PATH, { replace: true })
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : 'Registration failed.')
+      setError(formatAuthError(serverUrl, err, 'Registration failed.'))
     } finally {
       setSubmitting(false)
     }
@@ -58,6 +67,13 @@ export function RegisterPage() {
                 {error}
               </p>
             ) : null}
+            <ServerUrlField
+              id="register-server-url"
+              value={serverUrl}
+              onChange={setServerUrl}
+              disabled={submitting}
+              showValidation={showUrlValidation}
+            />
             <div className="form-field">
               <label className="form-label" htmlFor="register-username">
                 Username

@@ -13,7 +13,13 @@ Factual descriptions of HTTP endpoints, payloads, and environment-driven setting
 
   Obtain `<access-token>` from [`POST /api/auth/login`](#post-apiauthlogin). The UI stores it after login/register and attaches it automatically.
 
-The frontend uses `VITE_API_URL` as the API origin (no trailing slash); paths below are appended to that origin.
+The frontend resolves the API origin at **runtime** (no trailing slash; paths below are appended to that origin):
+
+1. User-configured URL in browser storage (set at register/login or in Settings)
+2. Optional build default `VITE_API_URL`
+3. `http://localhost:8080`
+
+For self-hosted deployments, users enter the origin of **their** API (e.g. `https://notes.example.com`). Database and JWT configuration remain on the server only.
 
 ---
 
@@ -159,7 +165,31 @@ Typical status codes: **400** (validation, bad input), **401** (missing/invalid 
 
 ## Actuator
 
-- **`GET /actuator/health`** — exposed; includes probe support in configuration.
+- **`GET /actuator/health`** — public (no JWT). Used by the frontend to verify connectivity before register/login. Returns **`200 OK`** when the API is up. Subject to the same CORS rules as `/api/**`.
+
+---
+
+## CORS for browser and self-hosted clients
+
+Browsers send an `Origin` header on cross-origin requests. The API must explicitly allow the origin of the **frontend page**, not the API hostname.
+
+| Setting | Env var | Default |
+|---------|---------|---------|
+| Allowed origins (comma-separated) | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,null` |
+
+**Self-host requirements:**
+
+- Add every UI origin you use: local Vite (`http://localhost:5173`), custom dev ports, deployed HTTPS domains, etc.
+- Include the literal token **`null`** only if you need packaged Electron or other clients that send `Origin: null` (common for `file://` renderers).
+- CORS applies to **`/api/**`** and **`/actuator/**`**. If health checks or auth fail with no response body in DevTools, the UI origin is usually missing from `CORS_ALLOWED_ORIGINS`.
+
+Example for a deployed UI plus local dev:
+
+```bash
+CORS_ALLOWED_ORIGINS=https://notes.example.com,http://localhost:5173,null
+```
+
+See [How-to: Fix browser CORS errors](how-to-configuration-and-troubleshooting.md#fix-browser-cors-errors) for troubleshooting.
 
 ---
 
@@ -183,9 +213,11 @@ Typical status codes: **400** (validation, bad input), **401** (missing/invalid 
 
 | Variable | Purpose | Default when unset |
 |----------|---------|---------------------|
-| `VITE_API_URL` | API origin for `fetch` | `http://localhost:8080` |
+| `VITE_API_URL` | Optional build-time default for the API origin; pre-fills the server URL field in the UI | Falls through to `http://localhost:8080` if the user has not set a URL in the app |
 
-Only variables prefixed with `VITE_` are exposed to client code. **Do not** put database passwords or `JWT_SECRET` in frontend env files.
+**Runtime API URL (primary for self-hosting):** stored in browser `localStorage` when the user submits Register, Sign in (with an optional changed URL), or saves Settings. It overrides `VITE_API_URL`. Changing it clears the tab-scoped auth session.
+
+Only variables prefixed with `VITE_` are exposed to client code. **Do not** put database passwords or `JWT_SECRET` in frontend env files. The API origin URL is public by design.
 
 ## Docker Compose (`notes-app/docker-compose.yml`)
 

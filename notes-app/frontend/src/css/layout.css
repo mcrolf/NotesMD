@@ -8,11 +8,11 @@
   }
 
   .app-header-inner {
-    @apply mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6;
+    @apply flex w-full items-center gap-4 px-4 py-3 sm:px-6;
   }
 
   .app-brand {
-    @apply font-heading flex items-center gap-2 text-lg font-semibold tracking-tight;
+    @apply font-heading flex shrink-0 items-center justify-start gap-2 text-lg font-semibold tracking-tight;
   }
 
   .app-brand-icon {
@@ -20,7 +20,7 @@
   }
 
   .app-actions {
-    @apply flex items-center gap-2 sm:gap-3;
+    @apply ml-auto flex items-center justify-end gap-2 sm:gap-3;
   }
 
   .app-username {

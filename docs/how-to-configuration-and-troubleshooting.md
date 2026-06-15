@@ -26,18 +26,58 @@ Problem-oriented recipes for running and integrating the **NotesMD** demo.
 
 **Frontend (`notes-app/frontend/`)**
 
-- Prefer **`notes-app/frontend/.env.local`** (copy from **`notes-app/frontend/.env.example`**) for `VITE_*` variables.
+- Prefer **`notes-app/frontend/.env.local`** (copy from **`notes-app/frontend/.env.example`**) for optional `VITE_*` variables.
 - **Never put database passwords or JWT signing keys in the frontend.** Only names prefixed with `VITE_` are exposed to the browser; assume anything there is public.
+
+---
+
+## Self-host the API and connect the frontend
+
+Each NotesMD frontend instance talks to **one** Spring Boot API. The database stays on the same host as that API (configured only via server env vars such as `SPRING_DATASOURCE_URL`). Users configure **one thing in the UI: the API origin URL** (no `/api` path suffix).
+
+### Checklist
+
+1. **Run Postgres and the API** on your machine — for example from `notes-app/`:
+   - `docker compose up -d` for Postgres
+   - Export server env from `.env`, then `cd backend && ./gradlew bootRun` (see [Environment variables](#environment-variables-security-and-loading) above).
+2. **Set server secrets and DB credentials** in `notes-app/.env` (or your deployment env): strong `JWT_SECRET`, `SPRING_DATASOURCE_*` matching Postgres, and non-default passwords.
+3. **Set `CORS_ALLOWED_ORIGINS`** on the API to include **every origin where you open the frontend** (exact scheme + host + port). Examples:
+   - Local Vite dev: `http://localhost:5173`
+   - Deployed UI: `https://notes.example.com`
+   - Packaged Electron (`file://`): include the literal `null` entry (see [Fix browser CORS errors](#fix-browser-cors-errors)).
+4. **Open the NotesMD frontend** (dev server, static build, or Electron) and enter your API URL on **Register** — e.g. `https://notes.example.com` or `http://localhost:8080`. On **Sign in**, the saved URL is used automatically; choose **Use a different server** only if you need to change it.
+5. **Register or sign in.** Registration creates the account **on your backend** (`POST /api/auth/register` → your Postgres). The API URL is client routing config only; it is not stored in the database.
+
+Before auth, the app may probe **`GET {api-url}/actuator/health`**. A failed probe usually means the URL is wrong, the API is down, or CORS is blocking the browser.
+
+### Change server later
+
+- **Signed out:** on **Register**, edit the server URL field directly. On **Sign in**, choose **Use a different server** to reveal the URL field (hidden by default; pre-filled from the last saved value).
+- **Signed in:** use **Settings → Server URL**, save, then sign in again against the new server. Changing the API origin clears the tab session because JWTs from one server are invalid on another.
 
 ---
 
 ## Point the frontend at a different API base URL
 
-The UI builds request URLs from `VITE_API_URL`. If it is unset, the client defaults to `http://localhost:8080`.
+The client resolves the API origin in this order:
+
+1. **User-configured URL** saved in the browser (`localStorage`, set at register/login or in Settings).
+2. **`VITE_API_URL`** from build/env (optional dev default).
+3. **`http://localhost:8080`** hardcoded fallback.
+
+### In the app (recommended for self-hosting)
+
+Enter the origin on **Register** (field label: *Your NotesMD server*). Use the origin only — no trailing slash and no `/api` path. On **Sign in**, the app reuses the stored URL; expand **Use a different server** to change it before signing in.
+
+### Optional build-time default (`VITE_API_URL`)
+
+Use this to pre-fill the server field for local development without typing `http://localhost:8080` each time:
 
 1. Copy `notes-app/frontend/.env.example` to `notes-app/frontend/.env.local` (preferred) or `.env`.
-2. Set `VITE_API_URL` to your API origin **without** a trailing slash, for example `https://api.example.com`.
+2. Uncomment and set `VITE_API_URL` to your API origin, for example `https://api.example.com`.
 3. Restart `npm run dev` (Vite reads env at startup).
+
+You do **not** need `VITE_API_URL` when users always set the URL in the UI.
 
 ---
 
@@ -45,12 +85,14 @@ The UI builds request URLs from `VITE_API_URL`. If it is unset, the client defau
 
 The API allows browser origins from `app.cors.allowed-origins` (env: `CORS_ALLOWED_ORIGINS`). The default allows `http://localhost:5173` and the literal origin value `null` (see below).
 
-- **Multiple origins:** use a comma-separated list, no spaces (or trim them in code—they are trimmed when parsed).
+**Self-host rule:** the value must include the **exact origin of the page running the frontend**, not the API URL. If you open the UI at `https://app.example.com` but only allow `http://localhost:5173`, register/login will fail in the browser with a CORS error (the app surfaces this as *Server blocked this app. Add this app's origin to CORS_ALLOWED_ORIGINS on your server.*).
+
+- **Multiple origins:** comma-separated list, no spaces required (values are trimmed when parsed). Example: `https://app.example.com,http://localhost:5173,null`
 - **Different Vite port:** add that origin, e.g. `http://localhost:5174`.
 - **Electron (packaged):** Chromium often sends **`Origin: null`** for cross-origin `fetch` from a `file://` renderer to `http://localhost:8080`. The backend must allow the literal **`null`** entry in `CORS_ALLOWED_ORIGINS`; the demo default includes it. Confirm with DevTools (**Network** → request headers) if requests still fail after changing origins.
 - **Production:** set `CORS_ALLOWED_ORIGINS` to the exact HTTPS origin(s) of your deployed UI. Omit `null` if you never serve the UI from `file://` and want to avoid permitting that opaque origin bucket.
 
-CORS is applied from `SecurityConfig` (and shared `CorsConfigurationSource`) for paths under `/api/**`.
+CORS is applied from `SecurityConfig` (and shared `CorsConfigurationSource`) for paths under `/api/**` and **`/actuator/**`** (including the health check used before login).
 
 ---
 
@@ -82,7 +124,7 @@ Create/update bodies are validated: title max length **500**, Markdown content m
 
 ## Frontend shows empty list but curl works
 
-Usually a **wrong `VITE_API_URL`**, **CORS**, or **mixed content** (HTTPS page calling HTTP API). Check the browser network tab and compare request URL and response headers with the recipes above.
+Usually a **wrong API server URL** (check Register, **Use a different server** on Sign in, or Settings — not only `VITE_API_URL`), **CORS**, or **mixed content** (HTTPS page calling HTTP API). Check the browser network tab and compare request URL and response headers with the recipes above.
 
 ---
 

@@ -55,6 +55,10 @@
     @apply text-muted-foreground text-center text-sm;
   }
 
+  .auth-server-toggle {
+    @apply text-muted-foreground text-sm;
+  }
+
   .text-link {
     @apply text-primary font-medium underline-offset-4 hover:underline;
   }

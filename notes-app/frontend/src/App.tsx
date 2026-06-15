@@ -10,6 +10,7 @@ import { StickyNote } from 'lucide-react'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SettingsMenu } from '@/components/SettingsMenu'
 import { Button } from '@/components/ui/button'
 import { NoteDetailPage } from '@/pages/NoteDetailPage'
 import { NoteNewPage } from '@/pages/NoteNewPage'
@@ -40,6 +41,7 @@ function AppHeader() {
               {username ? (
                 <span className="app-username">{username}</span>
               ) : null}
+              <SettingsMenu />
               <Button type="button" variant="default" size="sm" onClick={logout}>
                 Log out
               </Button>

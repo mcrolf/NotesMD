@@ -106,7 +106,7 @@ Open the dev URL Vite prints (commonly `http://localhost:5173`).
 ## Step 6: Use the app
 
 1. Open the dev URL from Step 5 (e.g. `http://localhost:5173`). **`/`** redirects into the app shell.
-2. **Register** at **`/register`** (username **3+** characters, password **8+** characters) or **Sign in** at **`/login`** if you already have an account.
+2. **Register** at **`/register`** (enter your API server URL if self-hosting, username **3+** characters, password **8+** characters) or **Sign in** at **`/login`** if you already have an account (server URL is hidden unless you choose **Use a different server**).
 3. After authentication you should land on the notes list at **`/notes`**.
 4. Create a note from **`/notes/new`**, add a title and Markdown body, and save.
 5. Open a note from the list (**`/notes/{id}`**) to read, edit, or delete.

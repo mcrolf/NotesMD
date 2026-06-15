@@ -24,7 +24,7 @@ app:
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
 
   cors:
-    # MN 260508 Comma-separated Origin values for /api/** (override with CORS_ALLOWED_ORIGINS). The literal
+    # MN 260508 Comma-separated Origin values for /api/** and /actuator/** (override with CORS_ALLOWED_ORIGINS). The literal
     # entry `null` allows packaged Electron (file://) and similar clients that send `Origin: null` on cross-origin fetch.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,null}
 

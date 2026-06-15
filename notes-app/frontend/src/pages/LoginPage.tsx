@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import { ApiError } from '@/api/client'
+import { getApiBaseUrl, setApiBaseUrl } from '@/api/apiConfig'
+import { assertApiHealth } from '@/api/apiHealth'
 import { useAuth } from '@/auth/AuthContext'
+import { formatAuthError } from '@/auth/formatAuthError'
+import { ServerUrlField } from '@/components/ServerUrlField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,9 +15,12 @@ export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [serverUrl, setServerUrl] = useState(() => getApiBaseUrl())
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showServerUrl, setShowServerUrl] = useState(false)
+  const [showUrlValidation, setShowUrlValidation] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const redirectTo = resolvePostLoginPath(
@@ -35,12 +41,20 @@ export function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setShowUrlValidation(true)
     setSubmitting(true)
     try {
+      const baseUrl = setApiBaseUrl(serverUrl)
+      setServerUrl(baseUrl)
+      await assertApiHealth(baseUrl)
       await login(username.trim(), password)
       navigate(redirectTo, { replace: true })
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : 'Sign in failed.')
+      const message = formatAuthError(serverUrl, err, 'Sign in failed.')
+      if (message !== 'Sign in failed.') {
+        setShowServerUrl(true)
+      }
+      setError(message)
     } finally {
       setSubmitting(false)
     }
@@ -61,6 +75,29 @@ export function LoginPage() {
               <p className="error-text" role="alert">
                 {error}
               </p>
+            ) : null}
+            <p className="auth-server-toggle">
+              <button
+                type="button"
+                className="text-link"
+                onClick={() => setShowServerUrl((visible) => !visible)}
+                disabled={submitting}
+                aria-expanded={showServerUrl}
+                aria-controls="login-server-url-section"
+              >
+                {showServerUrl ? 'Hide server URL' : 'Use a different server'}
+              </button>
+            </p>
+            {showServerUrl ? (
+              <div id="login-server-url-section">
+                <ServerUrlField
+                  id="login-server-url"
+                  value={serverUrl}
+                  onChange={setServerUrl}
+                  disabled={submitting}
+                  showValidation={showUrlValidation}
+                />
+              </div>
             ) : null}
             <div className="form-field">
               <label className="form-label" htmlFor="login-username">
