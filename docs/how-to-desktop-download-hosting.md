@@ -87,4 +87,5 @@ sha256sum -c SHA256SUMS.txt
 ## Related
 
 - [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md) — API CORS includes `null` for packaged Electron clients.
+- [Code-sign desktop releases](how-to-desktop-code-signing.md) — Apple Developer ID and Windows Authenticode for production installers.
 - [`server/downloads/README.md`](../server/downloads/README.md) — nginx/Apache details and CI notes.

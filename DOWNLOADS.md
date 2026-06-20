@@ -2,6 +2,8 @@
 
 The **NotesMD desktop app** (macOS, Windows, Linux) is built from the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository and hosted on your download server — not in this GitHub repo.
 
+Early releases may be **unsigned** (macOS: right-click → Open; Windows: SmartScreen prompt). Production builds use Apple Developer ID + notarization and Windows Authenticode — see [Code-sign desktop releases](docs/how-to-desktop-code-signing.md).
+
 Replace `notesmd.example.com` below with your production hostname before publishing.
 
 ---

@@ -86,4 +86,4 @@ sha256sum -c SHA256SUMS.txt
 
 After electron-builder jobs upload artifacts into `v${VERSION}/` on the server, run `generate-release-manifest.sh` from the deploy job (same SSH session as rsync). Pass `--base-url` matching the public HTTPS prefix.
 
-Full release workflow (GitHub Actions matrix) is documented in the desktop distribution plan; this directory supplies the server-side layout and manifest tooling only.
+Release workflow (GitHub Actions matrix) lives in the private **notesmd-frontend** repository. **Code signing** (Apple Developer ID + Windows Authenticode) is planned for production releases after unsigned v1 — see [Code-sign desktop releases](../../docs/how-to-desktop-code-signing.md).
