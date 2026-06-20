@@ -16,5 +16,5 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) structure: sepa
 
 - Backend and Compose: `notes-app/backend/`, `notes-app/docker-compose.yml`
 - Environment template (commit this; use placeholders only): `notes-app/.env.example`
-- NotesMD client (React + Electron): separate [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository
+- NotesMD client (React + Electron): separate repository
 - Local secrets and editor dirs: never commit — see repository [`.gitignore`](../.gitignore) (e.g. `.env`, `.env.*`, `.cursor/`, `.vscode/`)
