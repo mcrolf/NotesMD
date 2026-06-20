@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-manifest-url="/downloads/notesmd/latest.json">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Download — NotesMD</title>
+    <meta
+      name="description"
+      content="Download NotesMD for macOS, Windows, and Linux. Self-hosted Markdown notes with a desktop app."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/download.css" />
+  </head>
+  <body>
+    <div class="page">
+      <!-- Site header -->
+      <header class="site-header">
+        <a class="brand" href="/">NotesMD</a>
+        <nav class="site-nav" aria-label="Site">
+          <a href="https://github.com/mcrolf/NotesMD">GitHub</a>
+          <a href="https://github.com/mcrolf/NotesMD/blob/main/docs/README.md">Docs</a>
+        </nav>
+      </header>
+
+      <main class="main" id="main">
+        <!-- Hero -->
+        <section class="hero" aria-labelledby="hero-title">
+          <p class="eyebrow">Desktop app</p>
+          <h1 id="hero-title">Download NotesMD</h1>
+          <p class="lede">
+            Markdown notes that talk to your self-hosted API. Pick your platform below — links
+            update automatically from the release manifest.
+          </p>
+        </section>
+
+        <!-- Release status and platform buttons (filled by download.js) -->
+        <section class="release-panel" aria-labelledby="release-heading" aria-live="polite">
+          <div class="release-meta" id="release-meta">
+            <h2 id="release-heading" class="visually-hidden">Current release</h2>
+            <p class="status status--loading" id="release-status">Loading release information…</p>
+          </div>
+
+          <div class="platform-grid" id="platform-grid" hidden>
+            <a class="platform-card" id="btn-mac" href="#" data-platform="mac">
+              <span class="platform-label">macOS</span>
+              <span class="platform-hint">.dmg installer</span>
+            </a>
+            <a class="platform-card" id="btn-win" href="#" data-platform="win">
+              <span class="platform-label">Windows</span>
+              <span class="platform-hint">.exe installer</span>
+            </a>
+            <a class="platform-card" id="btn-linux" href="#" data-platform="linux">
+              <span class="platform-label">Linux</span>
+              <span class="platform-hint">AppImage</span>
+            </a>
+          </div>
+
+          <p class="checksum-link" id="checksum-row" hidden>
+            <a id="checksum-link" href="#">Verify SHA256 checksums</a>
+          </p>
+        </section>
+
+        <!-- Setup steps after install -->
+        <section class="steps" aria-labelledby="steps-title">
+          <h2 id="steps-title">After installing</h2>
+          <ol class="steps-list">
+            <li>Open NotesMD and choose <strong>Register</strong>.</li>
+            <li>Enter your API URL (e.g. <code>http://localhost:8080</code> or your HTTPS origin).</li>
+            <li>Create an account and start writing notes.</li>
+          </ol>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>
+          API and self-hosting guide on
+          <a href="https://github.com/mcrolf/NotesMD">GitHub</a>.
+        </p>
+      </footer>
+    </div>
+
+    <script src="assets/download.js" defer></script>
+  </body>
+</html>

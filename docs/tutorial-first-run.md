@@ -50,11 +50,17 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
 
 ## Step 3: Align JDBC settings with Postgres
 
-The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment** (Spring Boot does not automatically load `notes-app/.env` unless you configure that separately).
+The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment**. The provided **`backend/run.sh`** script loads `notes-app/.env` automatically before starting Gradle.
 
-**Ways to load `notes-app/.env` when running the API:**
+**Ways to run the API with your `.env` values:**
 
-- From `notes-app/`, before `backend` commands:
+- From `backend/` (recommended):
+
+  ```bash
+  ./run.sh
+  ```
+
+- From `notes-app/`, before Gradle directly:
 
   ```bash
   set -a && source .env && set +a && cd backend && ./gradlew bootRun
@@ -62,11 +68,11 @@ The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process envi
 
 - Or export the variables manually / use your IDE’s Run Configuration environment field to match `.env`.
 
-Defaults in `backend/src/main/resources/application.yml` assume:
+Defaults in `backend/src/main/resources/application.yml` (when env vars are unset):
 
-- URL: `jdbc:postgresql://localhost:5432/notes`
+- URL: `jdbc:postgresql://localhost:5432/notesMD`
 - User: `notes`
-- Password: `changeme` (override with `SPRING_DATASOURCE_PASSWORD` from `.env`)
+- Password: **none** — set `SPRING_DATASOURCE_PASSWORD` in `.env` (must match `POSTGRES_PASSWORD`)
 
 If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURCE_*` values match Postgres.
 
@@ -77,8 +83,10 @@ If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURC
 From `backend/`:
 
 ```bash
-./gradlew bootRun
+./run.sh
 ```
+
+Or, if you already exported the variables from `.env`, `./gradlew bootRun` works as well.
 
 Leave this process running. Confirm the app is up:
 

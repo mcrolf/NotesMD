@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "released": "2026-06-16",
+  "downloads": {
+    "mac": "https://notesmd.example.com/downloads/notesmd/v1.0.0/NotesMD-1.0.0.dmg",
+    "win": "https://notesmd.example.com/downloads/notesmd/v1.0.0/NotesMD-1.0.0-setup.exe",
+    "linux": "https://notesmd.example.com/downloads/notesmd/v1.0.0/NotesMD-1.0.0.AppImage"
+  },
+  "sha256": "https://notesmd.example.com/downloads/notesmd/v1.0.0/SHA256SUMS.txt"
+}

@@ -2,7 +2,8 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notesMD}
     username: ${SPRING_DATASOURCE_USERNAME:notes}
-    password: ${SPRING_DATASOURCE_PASSWORD:iAmThePassword}
+    # Set SPRING_DATASOURCE_PASSWORD in the environment (see notes-app/.env.example); no committed default.
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   flyway:
     # Adopt databases that already have tables (e.g. legacy Hibernate) but no flyway_schema_history.
     # Baselines at 1 by default, then applies V2+ (users, note owner_id). Prefer a fresh DB or repair if you get duplicate-object errors.

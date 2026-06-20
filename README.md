@@ -14,17 +14,20 @@ The **NotesMD client** (React web UI and Electron desktop app) lives in a separa
 
 ## Downloads
 
-Desktop and web client builds are hosted separately (not in this repository):
+Desktop and web client builds are hosted separately (not in this repository). See **[DOWNLOADS.md](DOWNLOADS.md)** for platform links, checksum verification, and setup steps.
 
-- **macOS / Windows / Linux:** _Coming soon — see [Phase 2 release plan](https://github.com/mcrolf/NotesMD)_
-- **Source (private):** [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) — requires repository access
+| | |
+|---|---|
+| **Download page** | [notesmd.example.com/download/](https://notesmd.example.com/download/) — reads [`latest.json`](https://notesmd.example.com/downloads/notesmd/latest.json) for current installer URLs |
+| **Source (private)** | [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) — requires repository access |
+| **Self-host downloads** | [Host desktop download artifacts](docs/how-to-desktop-download-hosting.md) — configs under [`server/downloads/`](server/downloads/), static page under [`server/website/`](server/website/) |
 
-After installing the client, point it at your API URL on **Register** (e.g. `http://localhost:8080` for local dev).
+Replace `notesmd.example.com` with your production hostname. After installing the client, point it at your API URL on **Register** (e.g. `http://localhost:8080` for local dev).
 
 ## Quick start
 
 1. Start the database (from `notes-app/`): copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file), then run `docker compose up -d`.
-2. Run the API (from `notes-app/backend/`): load the same variables into the environment (see [Environment variables](docs/how-to-configuration-and-troubleshooting.md#environment-variables-security-and-loading)), then `./gradlew bootRun`.
+2. Run the API (from `notes-app/backend/`): copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file), start Postgres with `docker compose up -d` from `notes-app/`, then `./run.sh`.
 3. Install the **NotesMD client** (desktop app or dev build from the frontend repo) and open **Register**. Enter your API origin (e.g. `http://localhost:8080`), create an account, and start taking notes.
 
 ## Environment variables
@@ -43,3 +46,7 @@ The React + Electron client is maintained separately. API contract and CORS requ
 
 - [REST API reference](docs/reference-rest-api-and-configuration.md)
 - [Self-host the API and connect a client](docs/how-to-configuration-and-troubleshooting.md#self-host-the-api-and-connect-the-frontend)
+
+## License
+
+This API and self-hosting materials are released under the [MIT License](LICENSE).

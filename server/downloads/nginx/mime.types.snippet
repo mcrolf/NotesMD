@@ -1,0 +1,9 @@
+# NotesMD desktop installer MIME types — include inside http { } or server { }
+# Standard nginx mime.types omit or mislabel some installer extensions.
+types {
+    application/json                         json;
+    text/plain                               txt;
+    application/x-apple-diskimage            dmg;
+    application/vnd.microsoft.portable-executable exe;
+    application/x-executable                 AppImage;
+}

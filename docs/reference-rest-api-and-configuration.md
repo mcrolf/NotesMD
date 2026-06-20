@@ -197,9 +197,9 @@ See [How-to: Fix browser CORS errors](how-to-configuration-and-troubleshooting.m
 
 | Key / env | Purpose | Default (typical) |
 |-----------|---------|-------------------|
-| `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/notes` |
+| `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/notesMD` |
 | `SPRING_DATASOURCE_USERNAME` | DB user | `notes` |
-| `SPRING_DATASOURCE_PASSWORD` | DB password | `changeme` |
+| `SPRING_DATASOURCE_PASSWORD` | DB password | **Required** — set in environment (see `notes-app/.env.example`; no committed default) |
 | `spring.jpa.hibernate.ddl-auto` | Hibernate schema mode vs DB | `validate` (Flyway owns migrations under `db/migration/`) |
 | `JWT_SECRET` → `app.jwt.secret` | HS256 signing key (**set explicitly** for shared or production-like environments) | **`local-dev-only-jwt-signing-key-not-for-production-use`** if unset (embedded default in `application.yml` — **never rely on this outside local solo dev**) |
 | `JWT_ISSUER` → `app.jwt.issuer` | JWT `iss` claim | `notes-api` |
