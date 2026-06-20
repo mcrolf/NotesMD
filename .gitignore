@@ -7,3 +7,11 @@
 # Editor and tool directories
 .cursor/
 .vscode/
+
+# Gradle / Java build outputs (backend)
+notes-app/backend/.gradle/
+notes-app/backend/build/
+notes-app/backend/bin/
+
+# OS
+.DS_Store
