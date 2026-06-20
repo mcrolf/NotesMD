@@ -24,16 +24,17 @@ Problem-oriented recipes for running and integrating the **NotesMD** demo.
 
 - Strongly recommended: set **`JWT_SECRET`** in `.env` (≥ 32 bytes of entropy in practice — generate with `openssl rand -base64 48`), plus **`SPRING_DATASOURCE_*`** matching your Postgres container. If **`JWT_SECRET`** is **not** set, `application.yml` applies a **fixed development default** so the process can start; that is **not** appropriate for shared machines, CI secrets, or production-like environments, and **changing the secret invalidates existing tokens**.
 
-**Frontend (`notes-app/frontend/`)**
+**NotesMD client (frontend repository)**
 
-- Prefer **`notes-app/frontend/.env.local`** (copy from **`notes-app/frontend/.env.example`**) for optional `VITE_*` variables.
-- **Never put database passwords or JWT signing keys in the frontend.** Only names prefixed with `VITE_` are exposed to the browser; assume anything there is public.
+- The official React + Electron client lives in the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository.
+- Optional **`VITE_API_URL`** in `.env.local` (copy from `.env.example` in that repo) pre-fills the server field for local dev.
+- **Never put database passwords or JWT signing keys in the client.** Only names prefixed with `VITE_` are exposed to the browser; assume anything there is public.
 
 ---
 
-## Self-host the API and connect the frontend
+## Self-host the API and connect the NotesMD client
 
-Each NotesMD frontend instance talks to **one** Spring Boot API. The database stays on the same host as that API (configured only via server env vars such as `SPRING_DATASOURCE_URL`). Users configure **one thing in the UI: the API origin URL** (no `/api` path suffix).
+Each NotesMD client instance talks to **one** Spring Boot API. The database stays on the same host as that API (configured only via server env vars such as `SPRING_DATASOURCE_URL`). Users configure **one thing in the UI: the API origin URL** (no `/api` path suffix).
 
 ### Checklist
 
@@ -45,7 +46,7 @@ Each NotesMD frontend instance talks to **one** Spring Boot API. The database st
    - Local Vite dev: `http://localhost:5173`
    - Deployed UI: `https://notes.example.com`
    - Packaged Electron (`file://`): include the literal `null` entry (see [Fix browser CORS errors](#fix-browser-cors-errors)).
-4. **Open the NotesMD frontend** (dev server, static build, or Electron) and enter your API URL on **Register** — e.g. `https://notes.example.com` or `http://localhost:8080`. On **Sign in**, the saved URL is used automatically; choose **Use a different server** only if you need to change it.
+4. **Open the NotesMD client** (desktop app, dev server, or static build) and enter your API URL on **Register** — e.g. `https://notes.example.com` or `http://localhost:8080`. On **Sign in**, the saved URL is used automatically; choose **Use a different server** only if you need to change it.
 5. **Register or sign in.** Registration creates the account **on your backend** (`POST /api/auth/register` → your Postgres). The API URL is client routing config only; it is not stored in the database.
 
 Before auth, the app may probe **`GET {api-url}/actuator/health`**. A failed probe usually means the URL is wrong, the API is down, or CORS is blocking the browser.
@@ -57,7 +58,7 @@ Before auth, the app may probe **`GET {api-url}/actuator/health`**. A failed pro
 
 ---
 
-## Point the frontend at a different API base URL
+## Point the client at a different API base URL
 
 The client resolves the API origin in this order:
 
@@ -71,9 +72,9 @@ Enter the origin on **Register** (field label: *Your NotesMD server*). Use the o
 
 ### Optional build-time default (`VITE_API_URL`)
 
-Use this to pre-fill the server field for local development without typing `http://localhost:8080` each time:
+Use this to pre-fill the server field for local development without typing `http://localhost:8080` each time (in the [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository):
 
-1. Copy `notes-app/frontend/.env.example` to `notes-app/frontend/.env.local` (preferred) or `.env`.
+1. Copy `.env.example` to `.env.local` (preferred) or `.env`.
 2. Uncomment and set `VITE_API_URL` to your API origin, for example `https://api.example.com`.
 3. Restart `npm run dev` (Vite reads env at startup).
 

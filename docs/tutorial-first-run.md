@@ -1,10 +1,10 @@
-# Tutorial: First run (NotesMD end-to-end)
+# Tutorial: First run (self-host the NotesMD API)
 
-**Goal:** Run PostgreSQL, the Spring Boot API, and the Vite frontend so you can **register**, **sign in**, and create and edit Markdown notes in the browser.
+**Goal:** Run PostgreSQL and the Spring Boot API so you can connect the **NotesMD client** (desktop app or dev build), **register**, **sign in**, and create Markdown notes.
 
-**Audience:** Developers comfortable with a terminal, Docker, and `npm`.
+**Audience:** Developers comfortable with a terminal, Docker, and `./gradlew`.
 
-**Time:** About 15 minutes, excluding downloads.
+**Time:** About 10 minutes, excluding downloads.
 
 ---
 
@@ -12,7 +12,7 @@
 
 - **Docker** (or another way to run PostgreSQL 16 with the same connection details)
 - **Java 17** (for the Gradle toolchain used by the backend)
-- **Node.js** and **npm** (current LTS is fine)
+- **NotesMD client** — install a desktop build from [Downloads](../README.md#downloads), or run the frontend dev server from the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository if you have access
 
 ---
 
@@ -50,11 +50,17 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
 
 ## Step 3: Align JDBC settings with Postgres
 
-The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment** (Spring Boot does not automatically load `notes-app/.env` unless you configure that separately).
+The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment**. The provided **`backend/run.sh`** script loads `notes-app/.env` automatically before starting Gradle.
 
-**Ways to load `notes-app/.env` when running the API:**
+**Ways to run the API with your `.env` values:**
 
-- From `notes-app/`, before `backend` commands:
+- From `backend/` (recommended):
+
+  ```bash
+  ./run.sh
+  ```
+
+- From `notes-app/`, before Gradle directly:
 
   ```bash
   set -a && source .env && set +a && cd backend && ./gradlew bootRun
@@ -62,11 +68,11 @@ The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process envi
 
 - Or export the variables manually / use your IDE’s Run Configuration environment field to match `.env`.
 
-Defaults in `backend/src/main/resources/application.yml` assume:
+Defaults in `backend/src/main/resources/application.yml` (when env vars are unset):
 
-- URL: `jdbc:postgresql://localhost:5432/notes`
+- URL: `jdbc:postgresql://localhost:5432/notesMD`
 - User: `notes`
-- Password: `changeme` (override with `SPRING_DATASOURCE_PASSWORD` from `.env`)
+- Password: **none** — set `SPRING_DATASOURCE_PASSWORD` in `.env` (must match `POSTGRES_PASSWORD`)
 
 If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURCE_*` values match Postgres.
 
@@ -77,8 +83,10 @@ If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURC
 From `backend/`:
 
 ```bash
-./gradlew bootRun
+./run.sh
 ```
+
+Or, if you already exported the variables from `.env`, `./gradlew bootRun` works as well.
 
 Leave this process running. Confirm the app is up:
 
@@ -90,26 +98,24 @@ You should see a JSON health payload.
 
 ---
 
-## Step 5: Run the frontend
+## Step 5: Connect the NotesMD client
 
-From `frontend/`:
+Open the **NotesMD** desktop app or frontend dev server. On **Register**:
 
-```bash
-npm install
-npm run dev
-```
+1. Enter your API origin — e.g. `http://localhost:8080` (no trailing slash, no `/api` path).
+2. Choose a username (**3+** characters) and password (**8+** characters).
 
-Open the dev URL Vite prints (commonly `http://localhost:5173`).
+On **Sign in**, the saved server URL is reused; choose **Use a different server** only when switching backends.
+
+For local Vite dev (`http://localhost:5173`), ensure `CORS_ALLOWED_ORIGINS` on the API includes that origin. See [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md#fix-browser-cors-errors).
 
 ---
 
 ## Step 6: Use the app
 
-1. Open the dev URL from Step 5 (e.g. `http://localhost:5173`). **`/`** redirects into the app shell.
-2. **Register** at **`/register`** (enter your API server URL if self-hosting, username **3+** characters, password **8+** characters) or **Sign in** at **`/login`** if you already have an account (server URL is hidden unless you choose **Use a different server**).
-3. After authentication you should land on the notes list at **`/notes`**.
-4. Create a note from **`/notes/new`**, add a title and Markdown body, and save.
-5. Open a note from the list (**`/notes/{id}`**) to read, edit, or delete.
+1. After authentication you should land on the notes list at **`/notes`**.
+2. Create a note from **`/notes/new`**, add a title and Markdown body, and save.
+3. Open a note from the list (**`/notes/{id}`**) to read, edit, or delete.
 
 If list loads fail with **401**, ensure you are logged in and that the backend has a stable **`JWT_SECRET`** (tokens from a previous run are invalid if the secret changes). For other issues, see [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md).
 
@@ -129,4 +135,4 @@ Tests use an in-memory H2 database; they do not require Docker.
 
 ## What you learned
 
-You now have a three-process setup: Postgres, Spring Boot on port **8080**, and Vite on port **5173**, with CORS allowing the browser to call the API. The note API is **JWT-protected**; notes are **isolated per user**. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.
+You now have Postgres and Spring Boot on port **8080**, ready for the NotesMD client. The note API is **JWT-protected**; notes are **isolated per user**. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.

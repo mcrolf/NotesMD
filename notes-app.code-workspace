@@ -5,10 +5,6 @@
       "path": "notes-app/backend"
     },
     {
-      "name": "frontend",
-      "path": "notes-app/frontend"
-    },
-    {
       "name": "repo",
       "path": "."
     }
