@@ -2,7 +2,7 @@
 
 **Goal:** Run PostgreSQL and the Spring Boot API so you can connect the **NotesMD client** (desktop app or dev build), **register**, **sign in**, and create Markdown notes.
 
-**Audience:** Developers comfortable with a terminal, Docker, and `./gradlew`.
+**Audience:** Developers comfortable with a terminal and Docker.
 
 **Time:** About 10 minutes, excluding downloads.
 
@@ -10,9 +10,10 @@
 
 ## Prerequisites
 
-- **Docker** (or another way to run PostgreSQL 16 with the same connection details)
-- **Java 17** (for the Gradle toolchain used by the backend)
+- **Docker** (Compose v2)
 - **NotesMD client** — install a desktop build from [Downloads](../README.md#downloads), or run the frontend dev server from the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository if you have access
+
+For **backend development on the host** (debugger, fast reload), you also need **Java 17** — see [Optional: run the API on the host](#optional-run-the-api-on-the-host-for-development).
 
 ---
 
@@ -22,7 +23,7 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
 
 ---
 
-## Step 2: Configure and start PostgreSQL
+## Step 2: Configure environment
 
 1. Copy the example env file:
 
@@ -33,72 +34,35 @@ Work from the `notes-app` directory inside this repository. Paths below are rela
 2. Edit `.env`:
    - Set **`POSTGRES_PASSWORD`** to a strong value for your machine.
    - Set **`SPRING_DATASOURCE_PASSWORD`** to the **same** value (the API uses it to connect).
-   - Set **`JWT_SECRET`** to a long random secret (for example `openssl rand -base64 48`). **Always set this** for anything beyond quick solo experimentation on your machine (`application.yml` includes a **dev-only fallback** so the JVM can boot if you skip it once — never use that for shared hosts or production-like stacks).
+   - Set **`JWT_SECRET`** to a long random secret (for example `openssl rand -base64 48`). **Always set this** for anything beyond quick solo experimentation on your machine.
    - Do **not** commit `.env` — it is listed in the repository `.gitignore`.
 
-3. Start the database:
-
-   ```bash
-   docker compose up -d
-   ```
-
-   Compose automatically reads `.env` in this directory for variable **substitution** in `docker-compose.yml` (e.g. Postgres credentials).
-
-4. Wait until the container is healthy. The compose file defines a `pg_isready` healthcheck.
-
 ---
 
-## Step 3: Align JDBC settings with Postgres
+## Step 3: Start Postgres and the API
 
-The API reads `SPRING_DATASOURCE_*` and **`JWT_SECRET`** from the **process environment**. The provided **`backend/run.sh`** script loads `notes-app/.env` automatically before starting Gradle.
-
-**Ways to run the API with your `.env` values:**
-
-- From `backend/` (recommended):
-
-  ```bash
-  ./run.sh
-  ```
-
-- From `notes-app/`, before Gradle directly:
-
-  ```bash
-  set -a && source .env && set +a && cd backend && ./gradlew bootRun
-  ```
-
-- Or export the variables manually / use your IDE’s Run Configuration environment field to match `.env`.
-
-Defaults in `backend/src/main/resources/application.yml` (when env vars are unset):
-
-- URL: `jdbc:postgresql://localhost:5432/notesMD`
-- User: `notes`
-- Password: **none** — set `SPRING_DATASOURCE_PASSWORD` in `.env` (must match `POSTGRES_PASSWORD`)
-
-If your `.env` uses different credentials, ensure the exported `SPRING_DATASOURCE_*` values match Postgres.
-
----
-
-## Step 4: Run the Spring Boot API
-
-From `backend/`:
+From `notes-app/`:
 
 ```bash
-./run.sh
+docker compose up -d
 ```
 
-Or, if you already exported the variables from `.env`, `./gradlew bootRun` works as well.
+Compose reads `.env` for variable substitution and passes secrets to the **`api`** service. The API waits for Postgres to become healthy, then starts and runs **Flyway** migrations automatically.
 
-Leave this process running. Confirm the app is up:
+The first run builds the API image from `backend/Dockerfile` (Gradle `bootJar`); later runs reuse the image unless you pass `--build`.
+
+Confirm the stack is up:
 
 ```bash
+docker compose ps
 curl -s http://localhost:8080/actuator/health
 ```
 
-You should see a JSON health payload.
+You should see both services healthy and a JSON health payload.
 
 ---
 
-## Step 5: Connect the NotesMD client
+## Step 4: Connect the NotesMD client
 
 Open the **NotesMD** desktop app or frontend dev server. On **Register**:
 
@@ -111,7 +75,7 @@ For local Vite dev (`http://localhost:5173`), ensure `CORS_ALLOWED_ORIGINS` on t
 
 ---
 
-## Step 6: Use the app
+## Step 5: Use the app
 
 1. After authentication you should land on the notes list at **`/notes`**.
 2. Create a note from **`/notes/new`**, add a title and Markdown body, and save.
@@ -121,7 +85,21 @@ If list loads fail with **401**, ensure you are logged in and that the backend h
 
 ---
 
-## Step 7: Run tests (optional)
+## Optional: run the API on the host (for development)
+
+When iterating on Java code, run only Postgres in Docker and the API via Gradle on your machine:
+
+```bash
+docker compose up -d postgres
+cd backend
+./run.sh
+```
+
+`./run.sh` loads `notes-app/.env` and uses **`SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/notesMD`** (the default in `.env.example`). Leave this process running and use the same health check as above.
+
+---
+
+## Step 6: Run tests (optional)
 
 From `backend/`:
 
@@ -136,3 +114,5 @@ Tests use an in-memory H2 database; they do not require Docker.
 ## What you learned
 
 You now have Postgres and Spring Boot on port **8080**, ready for the NotesMD client. The note API is **JWT-protected**; notes are **isolated per user**. Next, read [Architecture and data flow](explanation-architecture-and-data-flow.md) or jump to the [API reference](reference-rest-api-and-configuration.md) when integrating other clients.
+
+To pull a newer release without losing data, see [Upgrade an existing deployment](how-to-upgrade-existing-deployment.md).

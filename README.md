@@ -9,7 +9,8 @@ The **NotesMD client** (React web UI and Electron desktop app) lives in a separa
 | Path | Description |
 |------|-------------|
 | `notes-app/backend` | **Spring Boot 3.4**, **Java 17** (`com.notesmd.notes`): Spring Web, **Spring Data JPA**, Validation, **Spring Security** (stateless JWT), Actuator health; **Flyway** migrations; **PostgreSQL**; **JJWT**. Public: `POST /api/auth/register`, `POST /api/auth/login`. All **`/api/notes`** routes require `Authorization: Bearer <token>`; note access is scoped to the authenticated user (owner). |
-| `notes-app/docker-compose.yml` | **PostgreSQL 16** (Alpine) for local development |
+| `notes-app/docker-compose.yml` | **PostgreSQL 16** + **Spring Boot API** (build from `backend/Dockerfile`) |
+| `notes-app/backend/Dockerfile` | Multi-stage image: Gradle `bootJar`, JRE 17 runtime |
 | `docs/` | Self-hosting tutorial, configuration how-tos, REST API reference, architecture notes |
 
 ## Downloads
@@ -26,9 +27,12 @@ Replace `notesmd.example.com` with your production hostname. After installing th
 
 ## Quick start
 
-1. Start the database (from `notes-app/`): copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file), then run `docker compose up -d`.
-2. Run the API (from `notes-app/backend/`): copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file), start Postgres with `docker compose up -d` from `notes-app/`, then `./run.sh`.
-3. Install the **NotesMD client** (desktop app or dev build from the frontend repo) and open **Register**. Enter your API origin (e.g. `http://localhost:8080`), create an account, and start taking notes.
+1. From `notes-app/`: copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file).
+2. Start Postgres and the API: `docker compose up -d` (first run builds the API image from `backend/Dockerfile`).
+3. Confirm health: `curl -s http://localhost:8080/actuator/health`.
+4. Install the **NotesMD client** (desktop app or dev build from the frontend repo) and open **Register**. Enter your API origin (e.g. `http://localhost:8080`), create an account, and start taking notes.
+
+For backend development on the host, run `docker compose up -d postgres` and `./backend/run.sh` instead. To upgrade without losing data, see [Upgrade an existing deployment](docs/how-to-upgrade-existing-deployment.md).
 
 ## Environment variables
 

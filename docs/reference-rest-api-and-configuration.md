@@ -221,8 +221,11 @@ Only variables prefixed with `VITE_` are exposed to client code. **Do not** put 
 
 ## Docker Compose (`notes-app/docker-compose.yml`)
 
-| Service | Image | Host port |
-|---------|-------|-----------|
-| `postgres` | `postgres:16-alpine` | `${POSTGRES_PORT:-5432}` → 5432 |
+| Service | Image / build | Host port | Notes |
+|---------|---------------|-----------|-------|
+| `postgres` | `postgres:16-alpine` | `${POSTGRES_PORT:-5432}` → 5432 | Data in volume `postgres_data` |
+| `api` | Build `./backend` (`Dockerfile`) | `${SERVER_PORT:-8080}` → 8080 | `env_file: .env`; JDBC URL overridden to `postgres:5432` inside the network |
 
-Environment for the container uses `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (see `notes-app/.env.example`).
+Environment for Postgres uses `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. The API container receives the same `.env` plus compose overrides for `SPRING_DATASOURCE_URL` and required `JWT_SECRET` (see `notes-app/.env.example`).
+
+**Start stack:** `docker compose up -d` from `notes-app/`. **Postgres only (host dev):** `docker compose up -d postgres`. **Upgrade:** `docker compose up -d --build`.

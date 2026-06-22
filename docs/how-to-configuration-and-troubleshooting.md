@@ -13,8 +13,8 @@ Problem-oriented recipes for running and integrating the **NotesMD** demo.
 
 **Backend (`notes-app/.env`)**
 
-- Used by **Docker Compose** for Postgres when you run `docker compose` from `notes-app/` (variable substitution in `docker-compose.yml`).
-- **Spring Boot does not load this file automatically.** Before `./gradlew bootRun`, export variables from `.env`, for example from `notes-app/`:
+- Used by **Docker Compose** for both **Postgres** and the **`api`** service when you run `docker compose` from `notes-app/` (variable substitution in `docker-compose.yml` and `env_file` for the API container).
+- **Spring Boot does not load this file automatically** when you run on the host. Before `./gradlew bootRun`, export variables from `.env`, for example from `notes-app/`:
 
   ```bash
   set -a && source .env && set +a && cd backend && ./gradlew bootRun
@@ -38,9 +38,9 @@ Each NotesMD client instance talks to **one** Spring Boot API. The database stay
 
 ### Checklist
 
-1. **Run Postgres and the API** on your machine — for example from `notes-app/`:
-   - `docker compose up -d` for Postgres
-   - Export server env from `.env`, then `cd backend && ./gradlew bootRun` (see [Environment variables](#environment-variables-security-and-loading) above).
+1. **Run Postgres and the API** on your machine — from `notes-app/`:
+   - **Recommended (self-host):** `docker compose up -d` starts Postgres and the API (builds `backend/Dockerfile` on first run).
+   - **Backend development on the host:** `docker compose up -d postgres`, then `cd backend && ./run.sh` (see [Environment variables](#environment-variables-security-and-loading) above).
 2. **Set server secrets and DB credentials** in `notes-app/.env` (or your deployment env): strong `JWT_SECRET`, `SPRING_DATASOURCE_*` matching Postgres, and non-default passwords.
 3. **Set `CORS_ALLOWED_ORIGINS`** on the API to include **every origin where you open the frontend** (exact scheme + host + port). Examples:
    - Local Vite dev: `http://localhost:5173`
@@ -99,7 +99,22 @@ CORS is applied from `SecurityConfig` (and shared `CorsConfigurationSource`) for
 
 ## Change the API port
 
-Set `SERVER_PORT` before starting Spring Boot (default `8080`). If the UI still targets the old port, update `VITE_API_URL` accordingly.
+Set **`SERVER_PORT`** in `notes-app/.env` before `docker compose up -d` (default `8080`). Compose maps `${SERVER_PORT}:8080` on the host. If the UI still targets the old port, update the server URL in the client or optional `VITE_API_URL`.
+
+When running the API on the host via `./run.sh`, `SERVER_PORT` is passed through to Spring Boot the same way.
+
+---
+
+## Upgrade an existing deployment
+
+Pull updates and rebuild the API container without deleting Postgres data:
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Do **not** run `docker compose down -v` unless you intend to wipe the database. Full steps and backup notes: [Upgrade an existing deployment](how-to-upgrade-existing-deployment.md).
 
 ---
 
