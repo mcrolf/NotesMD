@@ -38,5 +38,5 @@ Open `http://localhost:8765/?manifest=https://notesmd.example.com/downloads/note
 
 ## Related
 
-- [DOWNLOADS.md](../../DOWNLOADS.md) — GitHub download links and checksum instructions
-- [How-to: Host desktop download artifacts](../../docs/how-to-desktop-download-hosting.md)
+- [DOWNLOADS.md](../../DOWNLOADS.md) — public download links and checksum instructions
+- [`server/downloads/`](../downloads/README.md) — download tree layout and manifest scripts

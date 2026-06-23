@@ -1,56 +1,41 @@
-# NotesMD (backend)
+# NotesMD (server)
 
-**NotesMD** is a self-hostable **Markdown notes** API: users **register** and **sign in**; notes are stored **per account** behind a JWT-protected REST API backed by PostgreSQL. Suitable for local experimentation, workshops, and production self-hosting.
+**NotesMD** is a self-hostable **Markdown notes** backend: you run the server on infrastructure you control; users connect with the **NotesMD app** from [notesmd.micnapoli.com](https://notesmd.micnapoli.com) to register, sign in, and manage notes stored in **your** PostgreSQL database.
 
-The **NotesMD client** (React web UI and Electron desktop app) lives in a separate private repository. Download installers from the [Downloads](#downloads) section below, or build the frontend from source if you have access.
+## For app users (self-hosting)
 
-## What is in the repo
+| Step | Link |
+|------|------|
+| Download the app | [DOWNLOADS.md](DOWNLOADS.md) · [notesmd.micnapoli.com](https://notesmd.micnapoli.com) |
+| Run your first server | [Tutorial: First run](docs/tutorial-first-run.md) |
+| Configure and troubleshoot | [Configuration and troubleshooting](docs/how-to-configuration-and-troubleshooting.md) |
+| Full documentation | [docs/README.md](docs/README.md) |
+
+After installing the app, open **Register** and enter your server URL (for example `http://localhost:8080` for a local Docker stack).
+
+## What is in this repository
 
 | Path | Description |
 |------|-------------|
-| `notes-app/backend` | **Spring Boot 3.4**, **Java 17** (`com.notesmd.notes`): Spring Web, **Spring Data JPA**, Validation, **Spring Security** (stateless JWT), Actuator health; **Flyway** migrations; **PostgreSQL**; **JJWT**. Public: `POST /api/auth/register`, `POST /api/auth/login`. All **`/api/notes`** routes require `Authorization: Bearer <token>`; note access is scoped to the authenticated user (owner). |
-| `notes-app/docker-compose.yml` | **PostgreSQL 16** + **Spring Boot API** (build from `backend/Dockerfile`) |
-| `notes-app/backend/Dockerfile` | Multi-stage image: Gradle `bootJar`, JRE 17 runtime |
-| `docs/` | Self-hosting tutorial, configuration how-tos, REST API reference, architecture notes |
+| `notes-app/backend` | Spring Boot API (Java 17): JWT auth, REST notes CRUD, Flyway migrations |
+| `notes-app/docker-compose.yml` | PostgreSQL 16 + API container for self-hosting |
+| `docs/` | End-user guides: tutorial, configuration, API reference, architecture overview |
 
-## Downloads
+## Quick start (server)
 
-Desktop and web client builds are hosted separately (not in this repository). See **[DOWNLOADS.md](DOWNLOADS.md)** for platform links, checksum verification, and setup steps.
+1. From `notes-app/`: copy `.env.example` to `.env` and set strong values for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and `JWT_SECRET`.
+2. Start the stack: `docker compose up -d`
+3. Confirm health: `curl -s http://localhost:8080/actuator/health`
+4. Install the [NotesMD app](DOWNLOADS.md), open **Register**, enter your API origin (e.g. `http://localhost:8080`), and create an account.
 
-| | |
-|---|---|
-| **Download page** | [notesmd.example.com/download/](https://notesmd.example.com/download/) — reads [`latest.json`](https://notesmd.example.com/downloads/notesmd/latest.json) for current installer URLs |
-| **Source (private)** | [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) — requires repository access |
-| **Self-host downloads** | [Host desktop download artifacts](docs/how-to-desktop-download-hosting.md) — configs under [`server/downloads/`](server/downloads/), static page under [`server/website/`](server/website/) |
-
-Replace `notesmd.example.com` with your production hostname. After installing the client, point it at your API URL on **Register** (e.g. `http://localhost:8080` for local dev).
-
-## Quick start
-
-1. From `notes-app/`: copy `notes-app/.env.example` to `notes-app/.env`, set **strong local values** for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and **`JWT_SECRET`** (see comments in the example file).
-2. Start Postgres and the API: `docker compose up -d` (first run builds the API image from `backend/Dockerfile`).
-3. Confirm health: `curl -s http://localhost:8080/actuator/health`.
-4. Install the **NotesMD client** (desktop app or dev build from the frontend repo) and open **Register**. Enter your API origin (e.g. `http://localhost:8080`), create an account, and start taking notes.
-
-For backend development on the host, run `docker compose up -d postgres` and `./backend/run.sh` instead. To upgrade without losing data, see [Upgrade an existing deployment](docs/how-to-upgrade-existing-deployment.md).
+To upgrade without losing data, see [Upgrade an existing deployment](docs/how-to-upgrade-existing-deployment.md).
 
 ## Environment variables
 
-- **Templates (safe to commit):** `notes-app/.env.example` — placeholders and documentation only.
-- **Real values (never commit):** copy to `notes-app/.env`. These patterns are listed in the repository [`.gitignore`](.gitignore) along with `.cursor/` and `.vscode/`.
-- **Details:** [Configuration and troubleshooting — Environment variables](docs/how-to-configuration-and-troubleshooting.md#environment-variables-security-and-loading).
-
-## Full documentation
-
-See the **[documentation index](docs/README.md)** for a tutorial, configuration how-tos, API reference, and architecture notes.
-
-## Frontend repository
-
-The React + Electron client is maintained separately. API contract and CORS requirements are documented here so any client (official app, custom UI, mobile) can integrate:
-
-- [REST API reference](docs/reference-rest-api-and-configuration.md)
-- [Self-host the API and connect a client](docs/how-to-configuration-and-troubleshooting.md#self-host-the-api-and-connect-the-frontend)
+- **Template:** `notes-app/.env.example` — placeholders only; safe to commit.
+- **Your values:** `notes-app/.env` — never commit (listed in `.gitignore`).
+- **Details:** [Configuration and troubleshooting — Environment variables](docs/how-to-configuration-and-troubleshooting.md#environment-variables)
 
 ## License
 
-This API and self-hosting materials are released under the [MIT License](LICENSE).
+This server and self-hosting materials are released under the [MIT License](LICENSE).

@@ -1,25 +1,21 @@
-# Reference: REST API and configuration
+# Reference: Server configuration and API
 
-Factual descriptions of HTTP endpoints, payloads, and environment-driven settings.
+Factual reference for **self-hosters**: environment variables, HTTP endpoints, and error shapes. The **NotesMD app** uses these endpoints automatically; you only need this page if you integrate another client or debug with `curl`.
 
 ---
 
 ## Base URL
 
-- Default local API: `http://localhost:8080`
-- **Authentication:** Requests to **`/api/notes`** and any other **`/api/*`** routes except **`/api/auth/register`** and **`/api/auth/login`** must include:
+- Local default: `http://localhost:8080`
+- **Your deployment:** whatever origin you enter in the app (no trailing slash; paths below are appended to that origin)
 
-  **`Authorization: Bearer <access-token>`**
+**Authentication:** All routes under `/api/notes` (and other protected `/api/*` routes except register and login) require:
 
-  Obtain `<access-token>` from [`POST /api/auth/login`](#post-apiauthlogin). The UI stores it after login/register and attaches it automatically.
+```http
+Authorization: Bearer <access-token>
+```
 
-The frontend resolves the API origin at **runtime** (no trailing slash; paths below are appended to that origin):
-
-1. User-configured URL in browser storage (set at register/login or in Settings)
-2. Optional build default `VITE_API_URL`
-3. `http://localhost:8080`
-
-For self-hosted deployments, users enter the origin of **their** API (e.g. `https://notes.example.com`). Database and JWT configuration remain on the server only.
+Obtain `<access-token>` from [`POST /api/auth/login`](#post-apiauthlogin). The NotesMD app stores and sends this token after you register or sign in.
 
 ---
 
@@ -27,7 +23,7 @@ For self-hosted deployments, users enter the origin of **their** API (e.g. `http
 
 ### `POST /api/auth/register`
 
-Creates an account.
+Creates an account on **your** server.
 
 **Authentication:** none (public).
 
@@ -35,7 +31,7 @@ Creates an account.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
-| `username` | string | required; **3–255** characters (trimmed on use) |
+| `username` | string | required; **3–255** characters |
 | `password` | string | required; **8–128** characters |
 
 **Response:** `201 Created`
@@ -62,23 +58,23 @@ Returns a JWT access token for an existing user.
 | Field | Type | Description |
 |-------|------|-------------|
 | `accessToken` | string | JWT (use as `Bearer` value) |
-| `tokenType` | string | Always `Bearer` in this API |
+| `tokenType` | string | Always `Bearer` |
 | `expiresIn` | number | Lifetime in **seconds** |
 | `username` | string | Authenticated username |
 
-**Errors:** `400` (validation), **`401 Unauthorized`** if the username/password pair is invalid ([error body](#error-responses)).
+**Errors:** `400` (validation), **`401 Unauthorized`** if credentials are invalid ([error body](#error-responses)).
 
 ---
 
 ### Note endpoints (`/api/notes`)
 
-Unless stated otherwise below, **`Authorization: Bearer <token>`** is **required**.
+Unless stated otherwise, **`Authorization: Bearer <token>`** is **required**.
 
 ### `GET /api/notes`
 
-Returns **the authenticated user’s** notes only, **newest first** by `createdAt`.
+Returns **the authenticated user's** notes, **newest first**.
 
-**Response:** `200 OK` — JSON array of [Note JSON objects](#note-json-object).
+**Response:** `200 OK` — JSON array of [Note objects](#note-json-object).
 
 ---
 
@@ -88,14 +84,14 @@ Returns **the authenticated user’s** notes only, **newest first** by `createdA
 
 **Response:**
 
-- `200 OK` — single [Note JSON object](#note-json-object); only if **owned** by the current user
-- `404 Not Found` — missing id or note belongs to another user ([error body](#error-responses))
+- `200 OK` — single [Note object](#note-json-object) if owned by the current user
+- `404 Not Found` — missing id or note belongs to another user
 
 ---
 
 ### `POST /api/notes`
 
-Creates a note **owned by the authenticated user**. Omitted or `null` fields use entity defaults (empty strings).
+Creates a note owned by the authenticated user.
 
 **Request body (JSON):**
 
@@ -104,7 +100,7 @@ Creates a note **owned by the authenticated user**. Omitted or `null` fields use
 | `title` | string | optional; max 500 characters |
 | `contentMarkdown` | string | optional; max 1_000_000 characters |
 
-**Response:** `201 Created` — [Note JSON object](#note-json-object)
+**Response:** `201 Created` — [Note object](#note-json-object)
 
 **Errors:** `400` for validation ([error body](#error-responses))
 
@@ -112,22 +108,22 @@ Creates a note **owned by the authenticated user**. Omitted or `null` fields use
 
 ### `PATCH /api/notes/{id}`
 
-Updates a note **owned by the current user**. **Only non-null fields in the body are applied**; `null` means “leave unchanged.”
+Updates a note owned by the current user. Only non-null fields in the body are applied.
 
 **Request body (JSON):** same fields as POST; all optional.
 
 **Response:**
 
-- `200 OK` — updated [Note JSON object](#note-json-object)
+- `200 OK` — updated [Note object](#note-json-object)
 - `404 Not Found` — missing id or note belongs to another user
 
-**Errors:** `400` for validation or malformed body/UUID
+**Errors:** `400` for validation or malformed input
 
 ---
 
 ### `DELETE /api/notes/{id}`
 
-Deletes a note **owned by the current user**.
+Deletes a note owned by the current user.
 
 **Response:**
 
@@ -143,14 +139,14 @@ Deletes a note **owned by the current user**.
 | `id` | string (UUID) | Server-generated |
 | `title` | string | |
 | `contentMarkdown` | string | Stored as Markdown |
-| `createdAt` | string | ISO-8601 instant (UTC in persistence layer) |
-| `updatedAt` | string | ISO-8601 instant |
+| `createdAt` | string | ISO-8601 instant (UTC) |
+| `updatedAt` | string | ISO-8601 instant (UTC) |
 
 ---
 
 ## Error responses
 
-JSON shape from the global exception handler:
+JSON shape from the API:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -159,73 +155,88 @@ JSON shape from the global exception handler:
 | `message` | string | Human-readable detail |
 | `fieldErrors` | object or null | Map of field name → message for validation failures |
 
-Typical status codes: **400** (validation, bad input), **401** (missing/invalid JWT on protected routes or failed login), **404** (missing note **or** wrong owner), **409** (duplicate username on register).
+Typical status codes: **400** (validation), **401** (missing/invalid token or failed login), **404** (missing note or wrong owner), **409** (duplicate username on register).
 
 ---
 
-## Actuator
+## Health check
 
-- **`GET /actuator/health`** — public (no JWT). Used by the frontend to verify connectivity before register/login. Returns **`200 OK`** when the API is up. Subject to the same CORS rules as `/api/**`.
+### `GET /actuator/health`
+
+Public (no token). The NotesMD app calls this before register/login to verify your server is reachable. Returns **`200 OK`** when the API is up. Subject to the same CORS rules as `/api/**`.
 
 ---
 
-## CORS for browser and self-hosted clients
+## CORS
 
-Browsers send an `Origin` header on cross-origin requests. The API must explicitly allow the origin of the **frontend page**, not the API hostname.
+Browsers and the desktop app send an `Origin` header. The server must allow the **client** origin, not the API hostname.
 
 | Setting | Env var | Default |
 |---------|---------|---------|
 | Allowed origins (comma-separated) | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,null` |
 
-**Self-host requirements:**
+For the **NotesMD desktop app**, include the literal token **`null`**. Add HTTPS web origins if you serve a browser UI on another host.
 
-- Add every UI origin you use: local Vite (`http://localhost:5173`), custom dev ports, deployed HTTPS domains, etc.
-- Include the literal token **`null`** only if you need packaged Electron or other clients that send `Origin: null` (common for `file://` renderers).
-- CORS applies to **`/api/**`** and **`/actuator/**`**. If health checks or auth fail with no response body in DevTools, the UI origin is usually missing from `CORS_ALLOWED_ORIGINS`.
-
-Example for a deployed UI plus local dev:
+Example:
 
 ```bash
-CORS_ALLOWED_ORIGINS=https://notes.example.com,http://localhost:5173,null
+CORS_ALLOWED_ORIGINS=null,https://notes.yourdomain.com
 ```
 
-See [How-to: Fix browser CORS errors](how-to-configuration-and-troubleshooting.md#fix-browser-cors-errors) for troubleshooting.
+See [Fix connection and CORS errors](how-to-configuration-and-troubleshooting.md#fix-connection-and-cors-errors).
 
 ---
 
-## Spring configuration (`application.yml`)
+## Server environment variables
 
-| Key / env | Purpose | Default (typical) |
-|-----------|---------|-------------------|
-| `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/notesMD` |
+Set these in **`notes-app/.env`** (see `.env.example`).
+
+| Env var | Purpose | Default / notes |
+|---------|---------|-----------------|
+| `SPRING_DATASOURCE_URL` | JDBC URL | Overridden to `postgres:5432` inside Docker Compose |
 | `SPRING_DATASOURCE_USERNAME` | DB user | `notes` |
-| `SPRING_DATASOURCE_PASSWORD` | DB password | **Required** — set in environment (see `notes-app/.env.example`; no committed default) |
-| `spring.jpa.hibernate.ddl-auto` | Hibernate schema mode vs DB | `validate` (Flyway owns migrations under `db/migration/`) |
-| `JWT_SECRET` → `app.jwt.secret` | HS256 signing key (**set explicitly** for shared or production-like environments) | **`local-dev-only-jwt-signing-key-not-for-production-use`** if unset (embedded default in `application.yml` — **never rely on this outside local solo dev**) |
-| `JWT_ISSUER` → `app.jwt.issuer` | JWT `iss` claim | `notes-api` |
-| `JWT_ACCESS_TOKEN_TTL` → `app.jwt.access-token-ttl` | Access token lifetime (ISO-8601 duration) | `PT1H` |
-| `CORS_ALLOWED_ORIGINS` → `app.cors.allowed-origins` | Allowed browser `Origin` values (comma-separated; include literal `null` for packaged Electron `file://` fetch) | `http://localhost:5173,null` |
-| `SERVER_PORT` | HTTP port | `8080` |
+| `SPRING_DATASOURCE_PASSWORD` | DB password | **Required** — must match `POSTGRES_PASSWORD` |
+| `JWT_SECRET` | HS256 signing key for login tokens | **Set explicitly** for any real deployment |
+| `JWT_ISSUER` | Token issuer claim | `notes-api` |
+| `JWT_ACCESS_TOKEN_TTL` | Access token lifetime (ISO-8601 duration) | `PT1H` (one hour) |
+| `CORS_ALLOWED_ORIGINS` | Allowed client origins | See [CORS](#cors) |
+| `SERVER_PORT` | API port on the host | `8080` |
+| `POSTGRES_PASSWORD` | Postgres container password | **Required** |
+| `POSTGRES_USER` | Postgres user | `notes` |
+| `POSTGRES_DB` | Database name | `notesMD` |
+| `POSTGRES_PORT` | Postgres port on the host | `5432` |
 
 ---
 
-## Frontend environment
+## Docker Compose services
 
-| Variable | Purpose | Default when unset |
-|----------|---------|---------------------|
-| `VITE_API_URL` | Optional build-time default for the API origin; pre-fills the server URL field in the UI | Falls through to `http://localhost:8080` if the user has not set a URL in the app |
+Run from **`notes-app/`**:
 
-**Runtime API URL (primary for self-hosting):** stored in browser `localStorage` when the user submits Register, Sign in (with an optional changed URL), or saves Settings. It overrides `VITE_API_URL`. Changing it clears the tab-scoped auth session.
+| Service | Role | Host port |
+|---------|------|-----------|
+| `postgres` | PostgreSQL 16; data in volume `postgres_data` | `${POSTGRES_PORT:-5432}` |
+| `api` | NotesMD API | `${SERVER_PORT:-8080}` |
 
-Only variables prefixed with `VITE_` are exposed to client code. **Do not** put database passwords or `JWT_SECRET` in frontend env files. The API origin URL is public by design.
+**Start:** `docker compose up -d`
 
-## Docker Compose (`notes-app/docker-compose.yml`)
+**Stop (keep data):** `docker compose down`
 
-| Service | Image / build | Host port | Notes |
-|---------|---------------|-----------|-------|
-| `postgres` | `postgres:16-alpine` | `${POSTGRES_PORT:-5432}` → 5432 | Data in volume `postgres_data` |
-| `api` | Build `./backend` (`Dockerfile`) | `${SERVER_PORT:-8080}` → 8080 | `env_file: .env`; JDBC URL overridden to `postgres:5432` inside the network |
+**Upgrade:** `docker compose up -d --build` — see [Upgrade an existing deployment](how-to-upgrade-existing-deployment.md)
 
-Environment for Postgres uses `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. The API container receives the same `.env` plus compose overrides for `SPRING_DATASOURCE_URL` and required `JWT_SECRET` (see `notes-app/.env.example`).
+**Never** use `docker compose down -v` unless you intend to delete all notes and accounts.
 
-**Start stack:** `docker compose up -d` from `notes-app/`. **Postgres only (host dev):** `docker compose up -d postgres`. **Upgrade:** `docker compose up -d --build`.
+---
+
+## NotesMD app configuration
+
+End users configure the server **in the app UI** (Register, Sign in, or Settings → Server URL). The app stores the URL and session on your device.
+
+You do **not** need to edit client configuration files to use NotesMD with a self-hosted server.
+
+---
+
+## Related reading
+
+- [Documentation index](README.md)
+- [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md)
+- [How NotesMD works](explanation-architecture-and-data-flow.md)

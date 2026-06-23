@@ -1,153 +1,162 @@
 # How-to: Configuration and troubleshooting
 
-Problem-oriented recipes for running and integrating the **NotesMD** demo.
+Problem-oriented guides for **self-hosting the NotesMD server** and using the **NotesMD app** from [notesmd.micnapoli.com](https://notesmd.micnapoli.com).
 
 ---
 
-## Environment variables (security and loading)
+## Environment variables
 
-**What gets committed**
+Configuration lives in **`notes-app/.env`** (copy from `.env.example`). Docker Compose reads this file when you run `docker compose` from `notes-app/`.
 
-- Only **`.env.example`** files belong in Git. They contain **placeholders and documentation**, never real passwords or production JWT secrets.
-- **`.env`**, **`.env.local`**, and other local env files are **gitignored** (see the repository [`.gitignore`](../.gitignore)). The same ignore rules cover **`.cursor/`** and **`.vscode/`** so editor paths and secrets stay local.
+| Variable | Purpose |
+|----------|---------|
+| `POSTGRES_PASSWORD` | Database password for the Postgres container |
+| `SPRING_DATASOURCE_PASSWORD` | Must match `POSTGRES_PASSWORD` — the API uses this to connect |
+| `JWT_SECRET` | Signs login tokens. **Always set** for any shared or long-lived server. Generate with `openssl rand -base64 48` |
+| `CORS_ALLOWED_ORIGINS` | Origins allowed to call your API from a browser or the desktop app (see [CORS](#fix-connection-and-cors-errors)) |
+| `SERVER_PORT` | Host port for the API (default `8080`) |
+| `POSTGRES_PORT` | Host port for Postgres (default `5432`; usually only needed for external DB tools) |
 
-**Backend (`notes-app/.env`)**
+**Important:** Changing **`JWT_SECRET`** does not delete your notes, but everyone must **sign in again** in the app to get new tokens.
 
-- Used by **Docker Compose** for both **Postgres** and the **`api`** service when you run `docker compose` from `notes-app/` (variable substitution in `docker-compose.yml` and `env_file` for the API container).
-- **Spring Boot does not load this file automatically** when you run on the host. Before `./gradlew bootRun`, export variables from `.env`, for example from `notes-app/`:
-
-  ```bash
-  set -a && source .env && set +a && cd backend && ./gradlew bootRun
-  ```
-
-  Or paste equivalent keys into your IDE run configuration.
-
-- Strongly recommended: set **`JWT_SECRET`** in `.env` (≥ 32 bytes of entropy in practice — generate with `openssl rand -base64 48`), plus **`SPRING_DATASOURCE_*`** matching your Postgres container. If **`JWT_SECRET`** is **not** set, `application.yml` applies a **fixed development default** so the process can start; that is **not** appropriate for shared machines, CI secrets, or production-like environments, and **changing the secret invalidates existing tokens**.
-
-**NotesMD client (frontend repository)**
-
-- The official React + Electron client lives in the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository.
-- Optional **`VITE_API_URL`** in `.env.local` (copy from `.env.example` in that repo) pre-fills the server field for local dev.
-- **Never put database passwords or JWT signing keys in the client.** Only names prefixed with `VITE_` are exposed to the browser; assume anything there is public.
+Never put database passwords or `JWT_SECRET` in the NotesMD app or any client-side file. The app only needs your **server URL**.
 
 ---
 
-## Self-host the API and connect the NotesMD client
+## Self-host the API and connect the NotesMD app
 
-Each NotesMD client instance talks to **one** Spring Boot API. The database stays on the same host as that API (configured only via server env vars such as `SPRING_DATASOURCE_URL`). Users configure **one thing in the UI: the API origin URL** (no `/api` path suffix).
+Each app install talks to **one** NotesMD server. You configure **one field in the app: your server URL** (the API origin, with no `/api` suffix).
 
 ### Checklist
 
-1. **Run Postgres and the API** on your machine — from `notes-app/`:
-   - **Recommended (self-host):** `docker compose up -d` starts Postgres and the API (builds `backend/Dockerfile` on first run).
-   - **Backend development on the host:** `docker compose up -d postgres`, then `cd backend && ./run.sh` (see [Environment variables](#environment-variables-security-and-loading) above).
-2. **Set server secrets and DB credentials** in `notes-app/.env` (or your deployment env): strong `JWT_SECRET`, `SPRING_DATASOURCE_*` matching Postgres, and non-default passwords.
-3. **Set `CORS_ALLOWED_ORIGINS`** on the API to include **every origin where you open the frontend** (exact scheme + host + port). Examples:
-   - Local Vite dev: `http://localhost:5173`
-   - Deployed UI: `https://notes.example.com`
-   - Packaged Electron (`file://`): include the literal `null` entry (see [Fix browser CORS errors](#fix-browser-cors-errors)).
-4. **Open the NotesMD client** (desktop app, dev server, or static build) and enter your API URL on **Register** — e.g. `https://notes.example.com` or `http://localhost:8080`. On **Sign in**, the saved URL is used automatically; choose **Use a different server** only if you need to change it.
-5. **Register or sign in.** Registration creates the account **on your backend** (`POST /api/auth/register` → your Postgres). The API URL is client routing config only; it is not stored in the database.
+1. **Run the server** from `notes-app/`:
 
-Before auth, the app may probe **`GET {api-url}/actuator/health`**. A failed probe usually means the URL is wrong, the API is down, or CORS is blocking the browser.
+   ```bash
+   docker compose up -d
+   ```
 
-### Change server later
+2. **Set secrets** in `.env`: strong `POSTGRES_PASSWORD`, matching `SPRING_DATASOURCE_PASSWORD`, and `JWT_SECRET`.
 
-- **Signed out:** on **Register**, edit the server URL field directly. On **Sign in**, choose **Use a different server** to reveal the URL field (hidden by default; pre-filled from the last saved value).
-- **Signed in:** use **Settings → Server URL**, save, then sign in again against the new server. Changing the API origin clears the tab session because JWTs from one server are invalid on another.
+3. **Set `CORS_ALLOWED_ORIGINS`** so the app can call your API:
+   - **Desktop app (default install):** include the literal value `null` — the default in `.env.example` already does this.
+   - **Additional origins:** add comma-separated entries if you also use a web UI on another hostname (for example `https://notes.yourdomain.com`).
 
----
+4. **Open the NotesMD app** → **Register** → enter your server URL:
+   - Same machine: `http://localhost:8080`
+   - LAN: `http://hostname-or-ip:8080`
+   - Public HTTPS: `https://notes.yourdomain.com`
 
-## Point the client at a different API base URL
+5. **Register or sign in.** Accounts are created **on your server**; the app stores the server URL and session locally.
 
-The client resolves the API origin in this order:
+Before login, the app may call **`GET {your-server}/actuator/health`**. Failure usually means the URL is wrong, the server is stopped, or CORS is blocking the request.
 
-1. **User-configured URL** saved in the browser (`localStorage`, set at register/login or in Settings).
-2. **`VITE_API_URL`** from build/env (optional dev default).
-3. **`http://localhost:8080`** hardcoded fallback.
+### Change server URL in the app
 
-### In the app (recommended for self-hosting)
+- **Signed out:** edit the URL on **Register**, or on **Sign in** choose **Use a different server**.
+- **Signed in:** **Settings → Server URL**, save, then sign in again on the new server.
 
-Enter the origin on **Register** (field label: *Your NotesMD server*). Use the origin only — no trailing slash and no `/api` path. On **Sign in**, the app reuses the stored URL; expand **Use a different server** to change it before signing in.
-
-### Optional build-time default (`VITE_API_URL`)
-
-Use this to pre-fill the server field for local development without typing `http://localhost:8080` each time (in the [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository):
-
-1. Copy `.env.example` to `.env.local` (preferred) or `.env`.
-2. Uncomment and set `VITE_API_URL` to your API origin, for example `https://api.example.com`.
-3. Restart `npm run dev` (Vite reads env at startup).
-
-You do **not** need `VITE_API_URL` when users always set the URL in the UI.
+Changing servers clears your local session because tokens from one server are not valid on another.
 
 ---
 
-## Fix browser CORS errors
+## Fix connection and CORS errors
 
-The API allows browser origins from `app.cors.allowed-origins` (env: `CORS_ALLOWED_ORIGINS`). The default allows `http://localhost:5173` and the literal origin value `null` (see below).
+The server only accepts browser and app requests from origins listed in **`CORS_ALLOWED_ORIGINS`**.
 
-**Self-host rule:** the value must include the **exact origin of the page running the frontend**, not the API URL. If you open the UI at `https://app.example.com` but only allow `http://localhost:5173`, register/login will fail in the browser with a CORS error (the app surfaces this as *Server blocked this app. Add this app's origin to CORS_ALLOWED_ORIGINS on your server.*).
+**Rule:** list the origin of the **client** (the app or web page), not the API URL.
 
-- **Multiple origins:** comma-separated list, no spaces required (values are trimmed when parsed). Example: `https://app.example.com,http://localhost:5173,null`
-- **Different Vite port:** add that origin, e.g. `http://localhost:5174`.
-- **Electron (packaged):** Chromium often sends **`Origin: null`** for cross-origin `fetch` from a `file://` renderer to `http://localhost:8080`. The backend must allow the literal **`null`** entry in `CORS_ALLOWED_ORIGINS`; the demo default includes it. Confirm with DevTools (**Network** → request headers) if requests still fail after changing origins.
-- **Production:** set `CORS_ALLOWED_ORIGINS` to the exact HTTPS origin(s) of your deployed UI. Omit `null` if you never serve the UI from `file://` and want to avoid permitting that opaque origin bucket.
+| Scenario | Typical `CORS_ALLOWED_ORIGINS` value |
+|----------|-------------------------------------|
+| Desktop app only | `null` (included in the default) |
+| Desktop + local testing on another port | `null,http://localhost:5173` |
+| Desktop + deployed web UI | `null,https://notes.yourdomain.com` |
 
-CORS is applied from `SecurityConfig` (and shared `CorsConfigurationSource`) for paths under `/api/**` and **`/actuator/**`** (including the health check used before login).
+Example in `.env`:
+
+```bash
+CORS_ALLOWED_ORIGINS=null,https://notes.yourdomain.com
+```
+
+After changing `.env`, restart the API:
+
+```bash
+docker compose up -d
+```
+
+If the app shows *Server blocked this app. Add this app's origin to CORS_ALLOWED_ORIGINS on your server*, add the suggested origin and restart.
+
+The desktop app often sends **`Origin: null`**; that is why `null` must appear in the list for packaged Electron builds.
 
 ---
 
 ## Change the API port
 
-Set **`SERVER_PORT`** in `notes-app/.env` before `docker compose up -d` (default `8080`). Compose maps `${SERVER_PORT}:8080` on the host. If the UI still targets the old port, update the server URL in the client or optional `VITE_API_URL`.
+Set **`SERVER_PORT`** in `notes-app/.env` (default `8080`), then:
 
-When running the API on the host via `./run.sh`, `SERVER_PORT` is passed through to Spring Boot the same way.
+```bash
+docker compose up -d
+```
+
+Update the server URL in the app to match (for example `http://localhost:9090`).
 
 ---
 
 ## Upgrade an existing deployment
 
-Pull updates and rebuild the API container without deleting Postgres data:
+Pull updates and rebuild without deleting Postgres data:
 
 ```bash
 git pull
 docker compose up -d --build
 ```
 
-Do **not** run `docker compose down -v` unless you intend to wipe the database. Full steps and backup notes: [Upgrade an existing deployment](how-to-upgrade-existing-deployment.md).
+Do **not** run `docker compose down -v` unless you intend to wipe all notes and accounts. Full steps: [Upgrade an existing deployment](how-to-upgrade-existing-deployment.md).
 
 ---
 
 ## Database connection refused
 
-- Ensure Postgres is running (`docker compose ps` in `notes-app/`).
-- Check `SPRING_DATASOURCE_URL`, username, and password match the container.
-- If the API runs **inside** Docker on the same Compose network, the hostname in the JDBC URL is often the service name (`postgres`), not `localhost`.
+- Ensure Postgres is running: `docker compose ps` in `notes-app/`.
+- Confirm `SPRING_DATASOURCE_PASSWORD` in `.env` matches `POSTGRES_PASSWORD`.
+- If you changed passwords after the first install, you may need to align `.env` with the existing volume or start fresh (which loses data).
 
 ---
 
-## Schema or migration surprises
+## Validation errors from the server
 
-The demo uses **Flyway** for PostgreSQL and `spring.jpa.hibernate.ddl-auto: validate`. Schema changes go through versioned SQL migrations under `backend/src/main/resources/db/migration/`. Treat destructive or prod-affected changes with the same care as any migrated service.
-
----
-
-## Validation errors from the API
-
-Create/update bodies are validated: title max length **500**, Markdown content max **1_000_000** characters. Errors return HTTP **400** with a JSON body that can include `fieldErrors`. See the [reference](reference-rest-api-and-configuration.md#error-responses).
+Note titles are limited to **500** characters; Markdown body to **1,000,000** characters. The app surfaces these as validation errors. Details: [Server configuration and API — Error responses](reference-rest-api-and-configuration.md#error-responses).
 
 ---
 
-## Frontend shows empty list but curl works
+## App shows an empty list but the server works
 
-Usually a **wrong API server URL** (check Register, **Use a different server** on Sign in, or Settings — not only `VITE_API_URL`), **CORS**, or **mixed content** (HTTPS page calling HTTP API). Check the browser network tab and compare request URL and response headers with the recipes above.
+Common causes:
+
+- **Wrong server URL** in Register, Sign in, or Settings — not the URL you tested with `curl`
+- **CORS** — see [Fix connection and CORS errors](#fix-connection-and-cors-errors)
+- **Mixed content** — an HTTPS page or proxy calling an HTTP API blocked by the client
+- **Expired session** — sign in again, especially after changing `JWT_SECRET`
 
 ---
 
-## Note requests return **401 Unauthorized**
+## Note requests return 401 Unauthorized
 
-Protected routes (**`/notes`** for the list, plus **`/notes/*`** for new/detail) call **`/api/notes`** with a Bearer token stored after **login/register**.
+Protected routes require a valid login from **your** server.
 
-- Confirm you completed **Register** or **Sign in**; open DevTools (**Application** → **Local storage**) if you want to verify a token exists for this origin / hash route.
-- If you **changed `JWT_SECRET`** or restarted Postgres / wiped volumes, **sign in again** so the client obtains a fresh token.
-- For manual **`curl`** tests against **`/api/notes`**, call **`POST /api/auth/login`** first and send **`Authorization: Bearer <accessToken>`** on subsequent requests.
+- Confirm you completed **Register** or **Sign in** in the app.
+- If you **changed `JWT_SECRET`** or wiped the database volume, sign in again.
+- Each server has its own accounts — registering on `localhost` does not create a user on a remote server.
+
+---
+
+## Expose your server on the internet (overview)
+
+For use outside your LAN:
+
+1. Run the stack on a host with a public IP or reverse proxy.
+2. Terminate **HTTPS** at your proxy (nginx, Caddy, Traefik, cloud load balancer).
+3. Set **`CORS_ALLOWED_ORIGINS`** to include `null` (desktop app) and any web origins you use.
+4. Use a strong **`JWT_SECRET`** and database password.
+5. Point the app at your public URL, for example `https://notes.yourdomain.com`.
+
+Firewall and TLS setup depend on your provider; the NotesMD server itself listens on the port configured in `SERVER_PORT` (default 8080).

@@ -1,59 +1,87 @@
-# Explanation: Architecture and data flow
+# Explanation: How NotesMD works
 
-This document explains how the **NotesMD** demo is structured and why, without step-by-step commands.
-
----
-
-## Purpose of the system
-
-Authenticated users maintain a Markdown note collection (**title + `contentMarkdown`**). The SPA renders Markdown for reading and edits plain Markdown in forms. Persistence is relational: **users**, **notes** with an **owner** foreign key, and server-generated timestamps. Each user sees **only their own notes** at the REST layer.
+This page explains how the **NotesMD app** and **your self-hosted server** fit together — without implementation details or source code.
 
 ---
 
-## Major components
+## The big picture
 
-1. **React SPA (NotesMD client)** — Maintained in the private [notesmd-frontend](https://github.com/mcrolf/notesmd-frontend) repository. Routing with **React Router**: public **`/login`** and **`/register`**, authenticated area under **`ProtectedRoute`** (notes list **`/notes`**, create **`/notes/new`**, detail **`/notes/:id`**). Root **`/`** redirects into that tree. **`AuthProvider`** holds session state and supplies `Authorization` headers via the API client (`fetch`). Users configure the API origin at register/login; optional **`VITE_API_URL`** pre-fills dev defaults. For packaged **Electron** or **`file:`** origins, **`HashRouter`** avoids path issues; otherwise **`BrowserRouter`** is used.
-2. **Spring Boot API** — JSON under **`/api/auth`** (register/login) and **`/api/notes`** (CRUD). **Spring Security** is **stateless**: a **JWT** filter validates the bearer token except on the two auth routes and actuator health. **CORS** is configured for **`/api/**`** using **`CORS_ALLOWED_ORIGINS`** (including literal **`null`** for some **`file:`**/`Origin: null` clients). Input is validated; errors map to a consistent **`ErrorResponse`** JSON shape.
-3. **PostgreSQL** — Durable storage in Docker volume **`postgres_data`**. **Flyway** applies migrations under **`db/migration/`**; Hibernate **`ddl-auto: validate`** ensures the schema matches entities. The **Spring Boot API** runs in the **`api`** Compose service (or on the host via `./run.sh` for development).
+NotesMD separates **where you write notes** (the app) from **where notes are stored** (your server):
 
-Tests swap in **H2** in-memory via `src/test/resources/application.yml`, so CI and local test runs do not need Postgres.
+```text
+┌─────────────────────┐         HTTPS or HTTP          ┌──────────────────────────┐
+│   NotesMD app       │  ───────────────────────────►  │  Your NotesMD server     │
+│   (your computer)   │  register, login, notes CRUD   │  API + PostgreSQL        │
+└─────────────────────┘                                └──────────────────────────┘
+        │                                                          │
+        │  Stores locally: server URL, login session               │  Stores: accounts,
+        │  (not your note content long-term in a cloud)            │  note titles & Markdown
+        └──────────────────────────────────────────────────────────┘
+```
 
----
-
-## Request flow (happy path)
-
-1. The user **registers** or **logs in**; the UI calls **`POST /api/auth/register`** or **`POST /api/auth/login`** and stores **`accessToken`** (and related fields) in **`localStorage`** (see `authStorage`).
-2. The user opens the list; the client sends **`GET /api/notes`** with **`Authorization: Bearer <accessToken>`**.
-3. The controller resolves the **current user id** from the JWT; the service loads **`Note`** rows **for that owner only**, ordered by **`createdAt`** descending, and returns **`NoteResponse`** records.
-4. For create/update, JSON bodies map to request records, validation runs, entities are saved with the correct **owner**. **`PATCH`** applies only **non-null** fields. **GET one / PATCH / DELETE** return **404** if the id does not exist **or** belongs to another user (no cross-tenant leakage).
-
----
-
-## Cross-origin access
-
-Browsers block cross-origin calls unless the server opts in. The demo enables CORS for **`/api/**`** from configurable origins so the Vite dev server (or a deployed static site, or Electron with **`Origin: null`**) can call the API. In production you would typically tighten origins, terminate TLS at a gateway, or co-locate UI and API behind one host.
+- **notesmd.micnapoli.com** is where you **download the app**. It does not store your notes or accounts.
+- **Your server** (this repository, run with Docker) stores **all** account and note data in **your** PostgreSQL database.
+- The **app** is the everyday interface: sign in, list notes, edit Markdown, save.
 
 ---
 
-## Error model
+## What runs on your server
 
-A **`@RestControllerAdvice`** maps not-found, validation, conflict (duplicate username), invalid credentials, and malformed input to JSON **`ErrorResponse`** payloads with HTTP status. The TypeScript client parses those bodies when present and throws **`ApiError`**; **`401`** on an authenticated request triggers the session **`unauthorizedHandler`** (logout / redirect to login).
+When you run `docker compose up -d` from `notes-app/`:
+
+1. **PostgreSQL** — durable storage for users and notes.
+2. **NotesMD API** — handles registration, login, and note create/read/update/delete.
+
+The API requires a **login token** (JWT) for every note operation. Each user sees **only their own notes**; the server enforces that on every request.
 
 ---
 
-## Security posture (demo scope)
+## What the app does
 
-The app **does** implement **authentication** and **per-user authorization** for notes:
+After you [download the app](../DOWNLOADS.md):
 
-- Passwords are stored as **bcrypt** hashes; login issues a short-lived **JWT** (HS256, configurable TTL).
-- **Note APIs require a valid JWT**; data access is **scoped by owner id** embedded in the token.
+1. You enter **your server URL** once (for example `http://localhost:8080` or `https://notes.yourdomain.com`).
+2. On **Register** or **Sign in**, the app talks to **your** server and receives a short-lived access token.
+3. For each action (list notes, save, delete), the app sends requests to **your** server with that token.
+4. The app keeps the server URL and session on **your device** so you do not re-enter them every time.
 
-It is still a **demo**: there is no refresh-token flow, no device/session management, no step-up auth, and no rate limiting or account lockout at the application layer. Treat **`JWT_SECRET`** like any signing key (**strong value in `.env`** for shared or staging/prod-like runs; **`application.yml`** supplies a **dev-only default** only so a solo developer can boot without exporting **`JWT_SECRET`**).
+You can point the same app at different servers over time via **Settings → Server URL**; each server has its own accounts and notes.
+
+---
+
+## Typical request flow
+
+1. **Register or sign in** — the app sends your username and password to your server; the server returns an access token if credentials are valid.
+2. **List notes** — the app asks your server for notes belonging to your account.
+3. **Create or edit** — the app sends the title and Markdown body; the server saves them linked to your account.
+4. **Delete** — the app asks the server to remove a note you own.
+
+If the token expires or the server rejects it, the app asks you to sign in again.
+
+---
+
+## Security and privacy (self-hosted scope)
+
+- **Passwords** are stored on your server as one-way hashes, not plain text.
+- **Note content** never passes through notesmd.micnapoli.com; it stays between your app and your server.
+- **You control** backups, network exposure, HTTPS, and who can reach the server.
+- Set a strong **`JWT_SECRET`** and database password in `.env` for any server that is shared or reachable from a network.
+
+NotesMD is a focused notes product, not a full identity platform: there is no built-in two-factor authentication, device management, or rate limiting. Treat network access and secrets according to your own threat model.
+
+---
+
+## Cross-origin access (why CORS matters)
+
+Browsers and the desktop app identify themselves with an **Origin** header. Your server must explicitly allow the app to call it via **`CORS_ALLOWED_ORIGINS`**.
+
+For the standard desktop build, include **`null`** in that list (the default does). If you skip this, registration and login can fail even when the server is running. See [Configuration and troubleshooting — CORS](how-to-configuration-and-troubleshooting.md#fix-connection-and-cors-errors).
 
 ---
 
 ## Related reading
 
-- [First run tutorial](tutorial-first-run.md)
-- [Configuration how-to](how-to-configuration-and-troubleshooting.md)
-- [API reference](reference-rest-api-and-configuration.md)
+- [Download the app](../DOWNLOADS.md)
+- [Tutorial: First run](tutorial-first-run.md)
+- [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md)
+- [Server configuration and API](reference-rest-api-and-configuration.md)

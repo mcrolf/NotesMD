@@ -1,13 +1,13 @@
 # How-to: Upgrade an existing deployment
 
-Use this when you already run NotesMD from `notes-app/` and want to pull a newer backend release **without** wiping Postgres.
+Use this when you already run the NotesMD server from `notes-app/` and want a **newer release without losing your notes**.
 
 ---
 
 ## Before you start
 
-- Your data lives in the Docker volume **`postgres_data`**. Normal restarts and API rebuilds **do not** delete it.
-- Keep the same **`notes-app/.env`** values for `POSTGRES_*`, `SPRING_DATASOURCE_*`, and especially **`JWT_SECRET`**. Changing `JWT_SECRET` does not erase the database, but users must **sign in again** to get new tokens.
+- Your notes and accounts live in the Docker volume **`postgres_data`**. Normal restarts and API rebuilds **do not** delete it.
+- Keep the same **`notes-app/.env`** values for `POSTGRES_*`, `SPRING_DATASOURCE_*`, and especially **`JWT_SECRET`**. Changing `JWT_SECRET` does not erase the database, but everyone must **sign in again** in the NotesMD app.
 
 Optional backup before a major upgrade:
 
@@ -15,22 +15,22 @@ Optional backup before a major upgrade:
 docker compose exec postgres pg_dump -U notes notesMD > notesmd-backup.sql
 ```
 
-Adjust `-U` / database name if your `.env` differs from the defaults.
+Adjust `-U` and the database name if your `.env` differs from the defaults.
 
 ---
 
 ## Upgrade steps
 
-From the repository root, then `notes-app/`:
+From the **`notes-app/`** directory:
 
 ```bash
 git pull
 docker compose up -d --build
 ```
 
-- **`--build`** rebuilds the **`api`** image from the updated source and recreates the API container.
+- **`--build`** rebuilds the API container from updated source.
 - **Postgres** keeps running with the existing **`postgres_data`** volume.
-- On startup, **Flyway** applies any new SQL migrations under `backend/src/main/resources/db/migration/` that have not run yet.
+- On startup, the server applies any new database migrations that have not run yet.
 
 Verify:
 
@@ -38,6 +38,8 @@ Verify:
 docker compose ps
 curl -s http://localhost:8080/actuator/health
 ```
+
+Open the **NotesMD app** and confirm you can still sign in and see your notes. If you changed `JWT_SECRET` during the upgrade, sign in again.
 
 ---
 
@@ -47,14 +49,14 @@ curl -s http://localhost:8080/actuator/health
 |---------|--------|
 | `docker compose down` | Stops containers; **data preserved** in `postgres_data` |
 | `docker compose down -v` | **Deletes** `postgres_data` — all notes and accounts gone |
-| Changing `POSTGRES_DB` on an existing volume | Can break an already-initialized cluster — treat as a new install |
+| Changing `POSTGRES_DB` on an existing volume | Can break an already-initialized database — treat as a new install |
 
 ---
 
 ## Troubleshooting
 
-- **API exits on startup** — check logs: `docker compose logs api`. Common causes: wrong DB password in `.env`, Flyway migration error, or Hibernate `validate` mismatch after a bad migration.
-- **401 after upgrade** — if you changed `JWT_SECRET`, sign in again from the client.
-- **Port already in use** — set `SERVER_PORT` in `.env` and point the client at the new port.
+- **API exits on startup** — check logs: `docker compose logs api`. Common causes: wrong DB password in `.env` or a failed database migration.
+- **401 after upgrade** — if you changed `JWT_SECRET`, sign in again from the app.
+- **Port already in use** — set `SERVER_PORT` in `.env`, run `docker compose up -d`, and update the server URL in the app.
 
-See also [Schema or migration surprises](how-to-configuration-and-troubleshooting.md#schema-or-migration-surprises).
+See also [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md).
