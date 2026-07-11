@@ -68,20 +68,25 @@ The server only accepts browser and app requests from origins listed in **`CORS_
 | Scenario | Typical `CORS_ALLOWED_ORIGINS` value |
 |----------|-------------------------------------|
 | Desktop app only | `null` (included in the default) |
+| Mobile app (Capacitor) | `capacitor://localhost,http://localhost` |
 | Desktop + local testing on another port | `null,http://localhost:5173` |
 | Desktop + deployed web UI | `null,https://notes.yourdomain.com` |
 
-Example in `.env`:
+Example for desktop, mobile, and local browser development in `.env`:
 
 ```bash
-CORS_ALLOWED_ORIGINS=null,https://notes.yourdomain.com
+CORS_ALLOWED_ORIGINS=null,capacitor://localhost,http://localhost,http://localhost:5173,http://127.0.0.1:5173
 ```
 
-After changing `.env`, restart the API:
+`capacitor://localhost` is the usual iOS app origin, while `http://localhost` is the usual Android app origin. These are client origins, not the API address, so do not add `http://localhost:8080` unless a browser UI is actually served from that origin.
+
+After changing `.env`, recreate the API container so Docker reloads the environment:
 
 ```bash
-docker compose up -d
+docker compose up -d --force-recreate api
 ```
+
+`docker restart notes-app-api` only restarts the existing container and does not reload `.env`.
 
 If the app shows *Server blocked this app. Add this app's origin to CORS_ALLOWED_ORIGINS on your server*, add the suggested origin and restart.
 
