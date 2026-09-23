@@ -66,6 +66,24 @@ Returns a JWT access token for an existing user.
 
 ---
 
+### `DELETE /api/auth/account`
+
+Permanently deletes the authenticated user and **all** of their notes, including archived notes. This cannot be undone.
+
+**Authentication:** Bearer JWT required.
+
+**Request body (JSON):**
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| `confirmation` | string | required; must be exactly `delete my account` |
+
+**Response:** `204 No Content`
+
+**Errors:** `400` (validation, including wrong confirmation phrase), **`401 Unauthorized`** if the token is missing or invalid ([error body](#error-responses)).
+
+---
+
 ### Note endpoints (`/api/notes`)
 
 Unless stated otherwise, **`Authorization: Bearer <token>`** is **required**.

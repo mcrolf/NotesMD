@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.notesmd.notes.dto.AuthCredentialsRequest;
 import com.notesmd.notes.dto.AuthRegisterResponse;
+import com.notesmd.notes.dto.DeleteAccountRequest;
 import com.notesmd.notes.dto.LoginResponse;
 import com.notesmd.notes.dto.NoteCreateRequest;
 import com.notesmd.notes.dto.NoteResponse;
 import com.notesmd.notes.dto.NoteUpdateRequest;
 import com.notesmd.notes.repository.NoteRepository;
+import com.notesmd.notes.repository.UserRepository;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,9 @@ class NotesApplicationTests {
 
     @Autowired
     private NoteRepository noteRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     void contextLoads() {}
@@ -380,10 +385,95 @@ class NotesApplicationTests {
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
+    @Test
+    void deleteAccount_withoutToken_returns401() {
+        ResponseEntity<String> res = restTemplate.exchange(
+                "/api/auth/account",
+                HttpMethod.DELETE,
+                new HttpEntity<>(new DeleteAccountRequest(DeleteAccountRequest.REQUIRED_PHRASE)),
+                String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void deleteAccount_wrongConfirmation_returns400() {
+        String token = registerAndLogin("del-confirm-" + UUID.randomUUID(), "password12");
+        HttpHeaders headers = authHeaders(token);
+
+        ResponseEntity<String> res = restTemplate.exchange(
+                "/api/auth/account",
+                HttpMethod.DELETE,
+                new HttpEntity<>(new DeleteAccountRequest("please delete"), headers),
+                String.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).contains("Validation failed");
+    }
+
+    @Test
+    void deleteAccount_removesUserNotesAndArchives_leavesOtherUsersIntact() {
+        String password = "password12";
+        String userA = "del-a-" + UUID.randomUUID();
+        String userB = "del-b-" + UUID.randomUUID();
+
+        ResponseEntity<AuthRegisterResponse> registeredA = restTemplate.postForEntity(
+                "/api/auth/register", new AuthCredentialsRequest(userA, password), AuthRegisterResponse.class);
+        assertThat(registeredA.getBody()).isNotNull();
+        UUID userAId = registeredA.getBody().userId();
+        HttpHeaders headersA = authHeaders(login(userA, password));
+        HttpHeaders headersB = authHeaders(registerAndLogin(userB, password));
+
+        ResponseEntity<NoteResponse> active = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("A active", "keep secret"), headersA),
+                NoteResponse.class);
+        assertThat(active.getBody()).isNotNull();
+        UUID activeId = active.getBody().id();
+
+        ResponseEntity<NoteResponse> archived = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("A archived", "also secret"), headersA),
+                NoteResponse.class);
+        assertThat(archived.getBody()).isNotNull();
+        UUID archivedId = archived.getBody().id();
+        restTemplate.exchange(
+                "/api/notes/" + archivedId + "/archive", HttpMethod.POST, new HttpEntity<>(headersA), Void.class);
+
+        ResponseEntity<NoteResponse> other = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest("B stays", "b"), headersB),
+                NoteResponse.class);
+        assertThat(other.getBody()).isNotNull();
+        UUID otherId = other.getBody().id();
+
+        ResponseEntity<Void> deleted = restTemplate.exchange(
+                "/api/auth/account",
+                HttpMethod.DELETE,
+                new HttpEntity<>(new DeleteAccountRequest(DeleteAccountRequest.REQUIRED_PHRASE), headersA),
+                Void.class);
+        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(userRepository.findById(userAId)).isEmpty();
+        assertThat(noteRepository.findById(activeId)).isEmpty();
+        assertThat(noteRepository.findById(archivedId)).isEmpty();
+        assertThat(noteRepository.findById(otherId)).isPresent();
+
+        ResponseEntity<String> loginAgain = restTemplate.postForEntity(
+                "/api/auth/login", new AuthCredentialsRequest(userA, password), String.class);
+        assertThat(loginAgain.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
     // Registers a user and returns a bearer token for authenticated API calls
     private String registerAndLogin(String username, String password) {
         restTemplate.postForEntity(
                 "/api/auth/register", new AuthCredentialsRequest(username, password), AuthRegisterResponse.class);
+        return login(username, password);
+    }
+
+    private String login(String username, String password) {
         ResponseEntity<LoginResponse> login = restTemplate.postForEntity(
                 "/api/auth/login", new AuthCredentialsRequest(username, password), LoginResponse.class);
         assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);

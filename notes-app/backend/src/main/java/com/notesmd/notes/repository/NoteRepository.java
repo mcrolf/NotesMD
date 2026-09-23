@@ -19,4 +19,6 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
     Optional<Note> findByIdAndOwnerId(UUID id, UUID ownerId);
 
     void deleteByIdAndOwnerId(UUID id, UUID ownerId);
+
+    void deleteAllByOwnerId(UUID ownerId);
 }
