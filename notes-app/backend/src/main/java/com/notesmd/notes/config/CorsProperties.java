@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CorsProperties {
 
     /**
-     * MN 260508 Comma-separated {@code Origin} header values for CORS (e.g. {@code http://localhost:5173} for Vite).
-     * Include the literal token {@code null} so packaged Electron renderers ({@code file://}) that send
-     * {@code Origin: null} to the API are permitted.
+     * Comma-separated {@code Origin} header values for CORS. {@code app://notesmd} is the packaged desktop app.
+     * The literal {@code null} only serves desktop builds up to 1.0.3, which load from {@code file://}; remove it
+     * once those builds are retired.
      */
-    private String allowedOrigins = "http://localhost:5173,null";
+    private String allowedOrigins = "http://localhost:5173,app://notesmd,null";
 
     public String getAllowedOrigins() {
         return allowedOrigins;

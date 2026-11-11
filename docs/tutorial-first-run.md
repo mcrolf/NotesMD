@@ -114,7 +114,7 @@ Do **not** run `docker compose down -v` unless you intend to **delete all notes 
 |---------|-------------|
 | App cannot reach the server | Confirm `curl -s http://localhost:8080/actuator/health` works; check the URL in Register (no `/api` suffix). |
 | **401** after restart | If you changed **`JWT_SECRET`**, sign in again in the app. |
-| Registration blocked in browser | Desktop app users: ensure `CORS_ALLOWED_ORIGINS` in `.env` includes `null` (default). See [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md). |
+| Registration blocked in browser | Desktop app users: ensure `CORS_ALLOWED_ORIGINS` in `.env` includes `app://notesmd` (default). See [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md). |
 
 Full troubleshooting: [Configuration and troubleshooting](how-to-configuration-and-troubleshooting.md).
 

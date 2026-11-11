@@ -4,6 +4,8 @@ import com.notesmd.notes.dto.NoteCreateRequest;
 import com.notesmd.notes.dto.NoteResponse;
 import com.notesmd.notes.dto.NoteUpdateRequest;
 import com.notesmd.notes.entity.Note;
+import com.notesmd.notes.exception.NoteArchivedException;
+import com.notesmd.notes.exception.NoteNotArchivedException;
 import com.notesmd.notes.exception.ResourceNotFoundException;
 import com.notesmd.notes.repository.NoteRepository;
 import com.notesmd.notes.repository.UserRepository;
@@ -77,27 +79,29 @@ public class NoteService {
 
     @Transactional
     public NoteResponse restore(UUID id, UUID ownerId) {
-        Note note = noteOrThrow(id, ownerId);
-        if (!note.isArchived()) {
-            throw new ResourceNotFoundException(id);
-        }
+        Note note = archivedNoteOrThrow(id, ownerId);
         note.setArchivedAt(null);
         return NoteResponse.from(noteRepository.save(note));
     }
 
     @Transactional
     public void delete(UUID id, UUID ownerId) {
-        Note note = noteOrThrow(id, ownerId);
-        if (!note.isArchived()) {
-            throw new ResourceNotFoundException(id);
-        }
+        archivedNoteOrThrow(id, ownerId);
         noteRepository.deleteByIdAndOwnerId(id, ownerId);
     }
 
     private Note activeNoteOrThrow(UUID id, UUID ownerId) {
         Note note = noteOrThrow(id, ownerId);
         if (note.isArchived()) {
-            throw new ResourceNotFoundException(id);
+            throw new NoteArchivedException();
+        }
+        return note;
+    }
+
+    private Note archivedNoteOrThrow(UUID id, UUID ownerId) {
+        Note note = noteOrThrow(id, ownerId);
+        if (!note.isArchived()) {
+            throw new NoteNotArchivedException();
         }
         return note;
     }

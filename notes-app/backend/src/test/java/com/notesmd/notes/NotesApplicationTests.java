@@ -157,7 +157,7 @@ class NotesApplicationTests {
     }
 
     @Test
-    void patchArchivedNote_returns404() {
+    void patchArchivedNote_returns409() {
         String username = "patch-archived-" + UUID.randomUUID();
         String password = "password12";
         HttpHeaders headers = authHeaders(registerAndLogin(username, password));
@@ -177,12 +177,12 @@ class NotesApplicationTests {
                 HttpMethod.PATCH,
                 new HttpEntity<>(new NoteUpdateRequest("Changed", null), headers),
                 String.class);
-        assertThat(patched.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(patched.getBody()).contains("Note not found");
+        assertThat(patched.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(patched.getBody()).contains("Note is archived");
     }
 
     @Test
-    void deleteActiveNote_returns404() {
+    void deleteActiveNote_returns409() {
         String username = "delete-active-" + UUID.randomUUID();
         String password = "password12";
         HttpHeaders headers = authHeaders(registerAndLogin(username, password));
@@ -197,10 +197,34 @@ class NotesApplicationTests {
 
         ResponseEntity<String> deleted = restTemplate.exchange(
                 "/api/notes/" + id, HttpMethod.DELETE, new HttpEntity<>(headers), String.class);
-        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(deleted.getBody()).contains("Note not found");
+        assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(deleted.getBody()).contains("Note is not archived");
         assertThat(noteRepository.findById(id)).isPresent();
         assertThat(noteRepository.findById(id).orElseThrow().isArchived()).isFalse();
+    }
+
+    @Test
+    void restoreActiveNote_returns409() {
+        HttpHeaders headers = authHeaders(registerAndLogin("restore-active-" + UUID.randomUUID(), "password12"));
+        UUID id = createNote(headers, "Active");
+
+        ResponseEntity<String> restored = restTemplate.exchange(
+                "/api/notes/" + id + "/restore", HttpMethod.POST, new HttpEntity<>(headers), String.class);
+
+        assertThat(restored.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(restored.getBody()).contains("Note is not archived");
+    }
+
+    @Test
+    void archiveArchivedNote_returns409() {
+        HttpHeaders headers = authHeaders(registerAndLogin("archive-twice-" + UUID.randomUUID(), "password12"));
+        UUID id = createNote(headers, "Twice");
+        restTemplate.exchange("/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), Void.class);
+
+        ResponseEntity<String> again = restTemplate.exchange(
+                "/api/notes/" + id + "/archive", HttpMethod.POST, new HttpEntity<>(headers), String.class);
+
+        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
@@ -464,6 +488,58 @@ class NotesApplicationTests {
         ResponseEntity<String> loginAgain = restTemplate.postForEntity(
                 "/api/auth/login", new AuthCredentialsRequest(userA, password), String.class);
         assertThat(loginAgain.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void deletedAccountToken_returns401() {
+        HttpHeaders headers = authHeaders(registerAndLogin("del-token-" + UUID.randomUUID(), "password12"));
+        restTemplate.exchange(
+                "/api/auth/account",
+                HttpMethod.DELETE,
+                new HttpEntity<>(new DeleteAccountRequest(DeleteAccountRequest.REQUIRED_PHRASE), headers),
+                Void.class);
+
+        ResponseEntity<String> notes =
+                restTemplate.exchange("/api/notes", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+        assertThat(notes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(notes.getBody()).contains("Invalid or expired token");
+    }
+
+    @Test
+    void legacyPlaceholderUser_cannotLogIn() {
+        ResponseEntity<String> res = restTemplate.postForEntity(
+                "/api/auth/login", new AuthCredentialsRequest("__legacy_unowned_notes__", "password"), String.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void repeatedFailedLogins_return429WithRetryAfter() {
+        String username = "throttled-" + UUID.randomUUID();
+        String password = "password12";
+        registerAndLogin(username, password);
+        for (int attempt = 0; attempt < 5; attempt++) {
+            ResponseEntity<String> failed = restTemplate.postForEntity(
+                    "/api/auth/login", new AuthCredentialsRequest(username, "wrong-password"), String.class);
+            assertThat(failed.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        ResponseEntity<String> locked = restTemplate.postForEntity(
+                "/api/auth/login", new AuthCredentialsRequest(username, password), String.class);
+
+        assertThat(locked.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(locked.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isNotBlank();
+    }
+
+    private UUID createNote(HttpHeaders headers, String title) {
+        ResponseEntity<NoteResponse> created = restTemplate.exchange(
+                "/api/notes",
+                HttpMethod.POST,
+                new HttpEntity<>(new NoteCreateRequest(title, "body"), headers),
+                NoteResponse.class);
+        assertThat(created.getBody()).isNotNull();
+        return created.getBody().id();
     }
 
     // Registers a user and returns a bearer token for authenticated API calls

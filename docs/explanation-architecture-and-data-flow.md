@@ -75,7 +75,7 @@ NotesMD is a focused notes product, not a full identity platform: there is no bu
 
 Browsers and the desktop app identify themselves with an **Origin** header. Your server must explicitly allow the app to call it via **`CORS_ALLOWED_ORIGINS`**.
 
-For the standard desktop build, include **`null`** in that list (the default does). If you skip this, registration and login can fail even when the server is running. See [Configuration and troubleshooting — CORS](how-to-configuration-and-troubleshooting.md#fix-connection-and-cors-errors).
+For the desktop app, include **`app://notesmd`** in that list (the default does; builds up to 1.0.3 need the deprecated `null` instead). If you skip this, registration and login can fail even when the server is running. See [Configuration and troubleshooting — CORS](how-to-configuration-and-troubleshooting.md#fix-connection-and-cors-errors).
 
 ---
 

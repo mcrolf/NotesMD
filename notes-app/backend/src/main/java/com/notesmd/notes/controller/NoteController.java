@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,50 +34,46 @@ public class NoteController {
     }
 
     @GetMapping
-    public List<NoteResponse> list(Authentication authentication) {
-        return noteService.listNewestFirst(currentUserId(authentication));
+    public List<NoteResponse> list(@AuthenticationPrincipal UUID userId) {
+        return noteService.listNewestFirst(userId);
     }
 
     @GetMapping("/archived")
-    public List<NoteResponse> listArchived(Authentication authentication) {
-        return noteService.listArchived(currentUserId(authentication));
+    public List<NoteResponse> listArchived(@AuthenticationPrincipal UUID userId) {
+        return noteService.listArchived(userId);
     }
 
     @GetMapping("/" + NOTE_ID)
-    public NoteResponse get(Authentication authentication, @PathVariable UUID id) {
-        return noteService.get(id, currentUserId(authentication));
+    public NoteResponse get(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        return noteService.get(id, userId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public NoteResponse create(Authentication authentication, @Valid @RequestBody NoteCreateRequest request) {
-        return noteService.create(request, currentUserId(authentication));
+    public NoteResponse create(@AuthenticationPrincipal UUID userId, @Valid @RequestBody NoteCreateRequest request) {
+        return noteService.create(request, userId);
     }
 
     @PatchMapping("/" + NOTE_ID)
     public NoteResponse patch(
-            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody NoteUpdateRequest request) {
-        return noteService.update(id, request, currentUserId(authentication));
+            @AuthenticationPrincipal UUID userId, @PathVariable UUID id, @Valid @RequestBody NoteUpdateRequest request) {
+        return noteService.update(id, request, userId);
     }
 
     @PostMapping("/" + NOTE_ID + "/archive")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void archive(Authentication authentication, @PathVariable UUID id) {
-        noteService.archive(id, currentUserId(authentication));
+    public void archive(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        noteService.archive(id, userId);
     }
 
     @PostMapping("/" + NOTE_ID + "/restore")
-    public NoteResponse restore(Authentication authentication, @PathVariable UUID id) {
-        return noteService.restore(id, currentUserId(authentication));
+    public NoteResponse restore(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        return noteService.restore(id, userId);
     }
 
     @DeleteMapping("/" + NOTE_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(Authentication authentication, @PathVariable UUID id) {
-        noteService.delete(id, currentUserId(authentication));
-    }
-
-    private static UUID currentUserId(Authentication authentication) {
-        return UUID.fromString(authentication.getName());
+    public void delete(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        noteService.delete(id, userId);
     }
 }
