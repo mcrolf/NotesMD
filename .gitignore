@@ -13,5 +13,8 @@ notes-app/backend/.gradle/
 notes-app/backend/build/
 notes-app/backend/bin/
 
+# Database dumps from `make backup`
+backups/
+
 # OS
 .DS_Store
