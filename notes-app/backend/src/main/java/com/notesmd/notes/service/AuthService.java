@@ -1,15 +1,19 @@
 package com.notesmd.notes.service;
 
+import com.notesmd.notes.config.AuthProperties;
 import com.notesmd.notes.dto.AuthCredentialsRequest;
 import com.notesmd.notes.dto.AuthRegisterResponse;
 import com.notesmd.notes.dto.DeleteAccountRequest;
 import com.notesmd.notes.dto.LoginResponse;
+import com.notesmd.notes.entity.LegacyOwnerIds;
 import com.notesmd.notes.entity.User;
 import com.notesmd.notes.exception.DuplicateUsernameException;
 import com.notesmd.notes.exception.InvalidCredentialsException;
+import com.notesmd.notes.exception.RegistrationDisabledException;
 import com.notesmd.notes.repository.NoteRepository;
 import com.notesmd.notes.repository.UserRepository;
 import com.notesmd.notes.security.JwtTokenService;
+import com.notesmd.notes.security.LoginThrottle;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,20 +30,29 @@ public class AuthService {
     private final NoteRepository noteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
+    private final LoginThrottle loginThrottle;
+    private final AuthProperties authProperties;
 
     public AuthService(
             UserRepository userRepository,
             NoteRepository noteRepository,
             PasswordEncoder passwordEncoder,
-            JwtTokenService jwtTokenService) {
+            JwtTokenService jwtTokenService,
+            LoginThrottle loginThrottle,
+            AuthProperties authProperties) {
         this.userRepository = userRepository;
         this.noteRepository = noteRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenService = jwtTokenService;
+        this.loginThrottle = loginThrottle;
+        this.authProperties = authProperties;
     }
 
     @Transactional
     public AuthRegisterResponse register(AuthCredentialsRequest request) {
+        if (!authProperties.isRegistrationEnabled()) {
+            throw new RegistrationDisabledException();
+        }
         String username = request.username().trim();
         if (userRepository.findByUsername(username).isPresent()) {
             throw new DuplicateUsernameException();
@@ -52,12 +65,17 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponse login(AuthCredentialsRequest request) {
+    public LoginResponse login(AuthCredentialsRequest request, String clientAddress) {
         String username = request.username().trim();
-        User user = userRepository.findByUsername(username).orElseThrow(InvalidCredentialsException::new);
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
-        }
+        loginThrottle.checkAllowed(clientAddress, username);
+        User user = userRepository
+                .findByUsername(username)
+                .filter(candidate -> canSignIn(candidate, request.password()))
+                .orElseThrow(() -> {
+                    loginThrottle.recordFailure(clientAddress, username);
+                    return new InvalidCredentialsException();
+                });
+        loginThrottle.recordSuccess(clientAddress, username);
         String accessToken = jwtTokenService.createAccessToken(user);
         return new LoginResponse(
                 accessToken,
@@ -66,13 +84,16 @@ public class AuthService {
                 user.getUsername());
     }
 
+    /** The confirmation phrase is enforced by {@link DeleteAccountRequest} validation at the controller. */
     @Transactional
-    public void deleteAccount(UUID userId, DeleteAccountRequest request) {
-        if (!DeleteAccountRequest.REQUIRED_PHRASE.equals(request.confirmation())) {
-            throw new IllegalArgumentException("Type \"delete my account\" to confirm");
-        }
+    public void deleteAccount(UUID userId) {
         noteRepository.deleteAllByOwnerId(userId);
         userRepository.deleteById(userId);
         log.info("Deleted account {}", userId);
+    }
+
+    private boolean canSignIn(User user, String password) {
+        return !LegacyOwnerIds.UNOWNED_NOTES_USER_ID.equals(user.getId())
+                && passwordEncoder.matches(password, user.getPasswordHash());
     }
 }

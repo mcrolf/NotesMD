@@ -12,7 +12,8 @@ Configuration lives in **`notes-app/.env`** (copy from `.env.example`). Docker C
 |----------|---------|
 | `POSTGRES_PASSWORD` | Database password for the Postgres container |
 | `SPRING_DATASOURCE_PASSWORD` | Must match `POSTGRES_PASSWORD` — the API uses this to connect |
-| `JWT_SECRET` | Signs login tokens. **Always set** for any shared or long-lived server. Generate with `openssl rand -base64 48` |
+| `JWT_SECRET` | Signs login tokens. **Required.** Generate with `openssl rand -base64 48`; the server will not start with the `.env.example` placeholder |
+| `REGISTRATION_ENABLED` | Set `false` after creating your accounts so nobody else can register on your server |
 | `CORS_ALLOWED_ORIGINS` | Origins allowed to call your API from a browser or the desktop app (see [CORS](#fix-connection-and-cors-errors)) |
 | `SERVER_PORT` | Host port for the API (default `8080`) |
 | `POSTGRES_PORT` | Host port for Postgres (default `5432`; usually only needed for external DB tools) |
@@ -38,7 +39,7 @@ Each app install talks to **one** NotesMD server. You configure **one field in t
 2. **Set secrets** in `.env`: strong `POSTGRES_PASSWORD`, matching `SPRING_DATASOURCE_PASSWORD`, and `JWT_SECRET`.
 
 3. **Set `CORS_ALLOWED_ORIGINS`** so the app can call your API:
-   - **Desktop app (default install):** include the literal value `null` — the default in `.env.example` already does this.
+   - **Desktop app:** include `app://notesmd` (the default in `.env.example` already does this). Keep `null` only for desktop builds up to 1.0.3.
    - **Additional origins:** add comma-separated entries if you also use a web UI on another hostname (for example `https://notes.yourdomain.com`).
 
 4. **Open the NotesMD app** → **Register** → enter your server URL:
@@ -67,15 +68,16 @@ The server only accepts browser and app requests from origins listed in **`CORS_
 
 | Scenario | Typical `CORS_ALLOWED_ORIGINS` value |
 |----------|-------------------------------------|
-| Desktop app only | `null` (included in the default) |
+| Desktop app only | `app://notesmd` (included in the default) |
+| Desktop app 1.0.3 or older | add `null` (deprecated) |
 | Mobile app (Capacitor) | `capacitor://localhost,http://localhost` |
-| Desktop + local testing on another port | `null,http://localhost:5173` |
-| Desktop + deployed web UI | `null,https://notes.yourdomain.com` |
+| Desktop + local testing on another port | `app://notesmd,http://localhost:5173` |
+| Desktop + deployed web UI | `app://notesmd,https://notes.yourdomain.com` |
 
 Example for desktop, mobile, and local browser development in `.env`:
 
 ```bash
-CORS_ALLOWED_ORIGINS=null,capacitor://localhost,http://localhost,http://localhost:5173,http://127.0.0.1:5173
+CORS_ALLOWED_ORIGINS=app://notesmd,capacitor://localhost,http://localhost,http://localhost:5173,http://127.0.0.1:5173
 ```
 
 `capacitor://localhost` is the usual iOS app origin, while `http://localhost` is the usual Android app origin. These are client origins, not the API address, so do not add `http://localhost:8080` unless a browser UI is actually served from that origin.
@@ -90,7 +92,7 @@ docker compose up -d --force-recreate api
 
 If the app shows *Server blocked this app. Add this app's origin to CORS_ALLOWED_ORIGINS on your server*, add the suggested origin and restart.
 
-The desktop app often sends **`Origin: null`**; that is why `null` must appear in the list for packaged Electron builds.
+The desktop app sends **`Origin: app://notesmd`**. Desktop builds up to 1.0.3 sent **`Origin: null`** instead; add `null` only if you still use one of those builds, and remove it after upgrading.
 
 ---
 
@@ -160,8 +162,9 @@ For use outside your LAN:
 
 1. Run the stack on a host with a public IP or reverse proxy.
 2. Terminate **HTTPS** at your proxy (nginx, Caddy, Traefik, cloud load balancer).
-3. Set **`CORS_ALLOWED_ORIGINS`** to include `null` (desktop app) and any web origins you use.
-4. Use a strong **`JWT_SECRET`** and database password.
-5. Point the app at your public URL, for example `https://notes.yourdomain.com`.
+3. Set **`CORS_ALLOWED_ORIGINS`** to include `app://notesmd` (desktop app) and any web origins you use.
+4. After creating your accounts, set **`REGISTRATION_ENABLED=false`**. Behind a reverse proxy, set **`SERVER_FORWARD_HEADERS_STRATEGY=framework`** so failed-login lockouts apply per real client.
+5. Use a strong **`JWT_SECRET`** and database password.
+6. Point the app at your public URL, for example `https://notes.yourdomain.com`.
 
 Firewall and TLS setup depend on your provider; the NotesMD server itself listens on the port configured in `SERVER_PORT` (default 8080).

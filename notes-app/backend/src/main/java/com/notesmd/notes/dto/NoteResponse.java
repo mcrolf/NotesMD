@@ -1,16 +1,18 @@
 package com.notesmd.notes.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.notesmd.notes.entity.Note;
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(requiredProperties = {"id", "title", "contentMarkdown", "createdAt", "updatedAt", "archivedAt"})
 public record NoteResponse(
         UUID id,
         String title,
         String contentMarkdown,
         Instant createdAt,
         Instant updatedAt,
-        Instant archivedAt) {
+        @Schema(nullable = true, description = "Set while the note is archived") Instant archivedAt) {
 
     public static NoteResponse from(Note note) {
         return new NoteResponse(

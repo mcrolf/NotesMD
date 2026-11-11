@@ -19,15 +19,23 @@ spring:
 
 app:
   jwt:
-    # HS256: set JWT_SECRET in the environment for non-local use (see notes-app/.env.example). Default is for local boot only.
-    secret: ${JWT_SECRET:local-dev-only-jwt-signing-key-not-for-production-use}
+    # HS256 signing key. Required, at least 32 bytes; startup fails on the .env.example placeholder.
+    # Generate with: openssl rand -base64 48
+    secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER:notesmd-api}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
 
+  auth:
+    # Set false after creating your accounts to close sign-ups (POST /api/auth/register returns 403).
+    registration-enabled: ${REGISTRATION_ENABLED:true}
+    # Failed logins allowed per client address and username before a lockout window.
+    login-max-failures: ${LOGIN_MAX_FAILURES:5}
+    login-lockout: ${LOGIN_LOCKOUT:PT15M}
+
   cors:
-    # MN 260508 Comma-separated Origin values for /api/** and /actuator/** (override with CORS_ALLOWED_ORIGINS). The literal
-    # entry `null` allows packaged Electron (file://) and similar clients that send `Origin: null` on cross-origin fetch.
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,null}
+    # Comma-separated Origin values for /api/** and /actuator/** (override with CORS_ALLOWED_ORIGINS).
+    # app://notesmd is the desktop app. `null` is only for desktop builds up to 1.0.3 (file://) and will be removed.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,app://notesmd,null}
 
 management:
   endpoints:
@@ -38,6 +46,12 @@ management:
     health:
       probes:
         enabled: true
+
+springdoc:
+  writer-with-order-by-keys: true
+  api-docs:
+    # Public OpenAPI description at /v3/api-docs; NotesMD/docs/openapi.json is the checked-in copy.
+    enabled: ${OPENAPI_DOCS_ENABLED:true}
 
 server:
   port: ${SERVER_PORT:8080}

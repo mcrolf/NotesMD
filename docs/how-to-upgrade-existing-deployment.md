@@ -17,6 +17,13 @@ docker compose exec postgres pg_dump -U notes notesMD > notesmd-backup.sql
 
 Adjust `-U` and the database name if your `.env` differs from the defaults.
 
+### Upgrading past the production remediation release
+
+- **`JWT_SECRET` is required.** The API no longer has a built-in default and refuses to start while `JWT_SECRET` is still the `CHANGE_ME` placeholder from `.env.example`. Set a real value (`openssl rand -base64 48`); everyone signs in again afterwards.
+- **Desktop CORS origin.** New desktop builds send `Origin: app://notesmd`. If you set `CORS_ALLOWED_ORIGINS` yourself, add `app://notesmd`. Keep `null` only while someone still uses desktop 1.0.3 or older.
+- **Legacy placeholder account.** Migration `V5` removes the internal `__legacy_unowned_notes__` user, or disables its password if notes from before user accounts still belong to it.
+- **Archive-state errors** now return `409 Conflict` instead of `404` (for example deleting a note that is not archived).
+
 ---
 
 ## Upgrade steps

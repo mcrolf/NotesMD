@@ -8,22 +8,23 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Set;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtTokenService {
 
+    private static final String PLACEHOLDER_PREFIX = "CHANGE_ME";
+    private static final Set<String> PUBLISHED_SECRETS =
+            Set.of("local-dev-only-jwt-signing-key-not-for-production-use");
+
     private final JwtProperties props;
     private final SecretKey key;
 
     public JwtTokenService(JwtProperties props) {
         this.props = props;
-        byte[] bytes = props.getSecret().getBytes(StandardCharsets.UTF_8);
-        if (bytes.length < 32) {
-            throw new IllegalStateException("JWT secret must be at least 32 bytes (UTF-8) for HS256");
-        }
-        this.key = Keys.hmacShaKeyFor(bytes);
+        this.key = Keys.hmacShaKeyFor(usableSecretBytes(props.getSecret()));
     }
 
     public String createAccessToken(User user) {
@@ -50,5 +51,18 @@ public class JwtTokenService {
 
     public long accessTokenTtlSeconds() {
         return props.getAccessTokenTtl().toSeconds();
+    }
+
+    /** Anyone who knows the secret can sign a token for any user id, so published values are refused. */
+    private static byte[] usableSecretBytes(String secret) {
+        if (secret.startsWith(PLACEHOLDER_PREFIX) || PUBLISHED_SECRETS.contains(secret)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is a published example value; generate one with: openssl rand -base64 48");
+        }
+        byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes (UTF-8) for HS256");
+        }
+        return bytes;
     }
 }
