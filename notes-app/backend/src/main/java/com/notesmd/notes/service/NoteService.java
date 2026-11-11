@@ -93,7 +93,7 @@ public class NoteService {
     private Note activeNoteOrThrow(UUID id, UUID ownerId) {
         Note note = noteOrThrow(id, ownerId);
         if (note.isArchived()) {
-            throw new NoteArchivedException(id);
+            throw new NoteArchivedException();
         }
         return note;
     }
@@ -101,7 +101,7 @@ public class NoteService {
     private Note archivedNoteOrThrow(UUID id, UUID ownerId) {
         Note note = noteOrThrow(id, ownerId);
         if (!note.isArchived()) {
-            throw new NoteNotArchivedException(id);
+            throw new NoteNotArchivedException();
         }
         return note;
     }
