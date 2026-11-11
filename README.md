@@ -23,10 +23,23 @@ After installing the app, open **Register** and enter your server URL (for examp
 
 ## Quick start (server)
 
-1. From `notes-app/`: copy `.env.example` to `.env` and set strong values for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and `JWT_SECRET`.
-2. Start the stack: `docker compose up -d`
-3. Confirm health: `curl -s http://localhost:8080/actuator/health`
+1. From the repository root, run `make env`. It creates `notes-app/.env` from `.env.example` with a generated database password and `JWT_SECRET`. (Or copy the file yourself and set strong values for `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (must match), and `JWT_SECRET`.)
+2. Start the stack: `make up` builds the API, starts PostgreSQL and the API, and waits until both are healthy. Without `make`: `docker compose up -d` from `notes-app/`.
+3. Confirm health: `make health` or `curl -s http://localhost:8080/actuator/health`
 4. Install the [NotesMD app](DOWNLOADS.md), open **Register**, enter your API origin (e.g. `http://localhost:8080`), and create an account.
+
+Other targets (`make help` lists them all):
+
+| Target | What it does |
+|--------|--------------|
+| `make down` | Stop the stack; notes and accounts stay in the `postgres_data` volume |
+| `make restart` | Recreate the API so it reloads `notes-app/.env` |
+| `make logs` / `make ps` | Follow API logs / show container status |
+| `make backup` | Dump the database to `backups/notesmd-<timestamp>.sql` |
+| `make db` / `make dev` | Start only PostgreSQL / run the API on the host with Gradle against it |
+| `make test` | Run the API test suite |
+
+`make up`, `make restart`, and `make db` refuse to run while `notes-app/.env` is missing or still has `CHANGE_ME` placeholders. No target deletes the database volume.
 
 To upgrade without losing data, see [Upgrade an existing deployment](docs/how-to-upgrade-existing-deployment.md).
 
