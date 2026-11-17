@@ -9,6 +9,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity
@@ -30,6 +31,10 @@ public class User {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    /** Access tokens issued at or before this instant are revoked; null when none are. */
+    @Column(name = "tokens_valid_after")
+    private Instant tokensValidAfter;
 
     @PrePersist
     void prePersist() {
@@ -69,5 +74,18 @@ public class User {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * Revokes every access token issued up to {@code now}. JWT {@code iat} has whole-second precision, so the
+     * cutoff is truncated to the second and a token issued within that second is revoked too.
+     */
+    public void revokeAccessTokensIssuedUpTo(Instant now) {
+        tokensValidAfter = now.truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    /** Whether an access token issued at {@code issuedAt} has not been revoked. */
+    public boolean acceptsAccessTokenIssuedAt(Instant issuedAt) {
+        return tokensValidAfter == null || issuedAt.isAfter(tokensValidAfter);
     }
 }

@@ -41,7 +41,7 @@ The API requires a **login token** (JWT) for every note operation. Each user see
 After you [download the app](../DOWNLOADS.md):
 
 1. You enter **your server URL** once (for example `http://localhost:8080` or `https://notes.yourdomain.com`).
-2. On **Register** or **Sign in**, the app talks to **your** server and receives a short-lived access token.
+2. On **Register** or **Sign in**, the app talks to **your** server and receives an access token that lasts seven days by default (`JWT_ACCESS_TOKEN_TTL`).
 3. For each action (list notes, save, delete), the app sends requests to **your** server with that token.
 4. The app keeps the server URL and session on **your device** so you do not re-enter them every time.
 
@@ -56,7 +56,7 @@ You can point the same app at different servers over time via **Settings → Ser
 3. **Create or edit** — the app sends the title and Markdown body; the server saves them linked to your account.
 4. **Delete** — the app asks the server to remove a note you own.
 
-If the token expires or the server rejects it, the app asks you to sign in again.
+If the token expires or the server rejects it (for example after **Sign out everywhere**), the app asks you to sign in again.
 
 ---
 

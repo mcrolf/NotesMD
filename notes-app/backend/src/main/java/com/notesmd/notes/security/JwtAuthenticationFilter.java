@@ -3,12 +3,15 @@ package com.notesmd.notes.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notesmd.notes.exception.ErrorResponse;
 import com.notesmd.notes.repository.UserRepository;
+import com.notesmd.notes.entity.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,7 +28,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * Authenticates {@code Authorization: Bearer} access tokens. The JWT subject is the user id; it becomes the
  * {@link UUID} principal that controllers read with {@code @AuthenticationPrincipal} and pass to services as the
- * note owner id. A token whose user no longer exists (for example after account deletion) is rejected.
+ * note owner id. A token is rejected when its user no longer exists (for example after account deletion) or when
+ * it was issued before the user signed out everywhere.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -79,12 +83,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private Optional<UUID> liveUserId(String token) {
         try {
-            String subject = jwtTokenService.parseAndValidate(token).getSubject();
-            if (subject == null) {
+            Claims claims = jwtTokenService.parseAndValidate(token);
+            if (claims.getSubject() == null || claims.getIssuedAt() == null) {
                 return Optional.empty();
             }
-            UUID userId = UUID.fromString(subject);
-            return userRepository.existsById(userId) ? Optional.of(userId) : Optional.empty();
+            Instant issuedAt = claims.getIssuedAt().toInstant();
+            return userRepository
+                    .findById(UUID.fromString(claims.getSubject()))
+                    .filter(user -> user.acceptsAccessTokenIssuedAt(issuedAt))
+                    .map(User::getId);
         } catch (JwtException | IllegalArgumentException ex) {
             return Optional.empty();
         }

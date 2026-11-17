@@ -14,6 +14,7 @@ import com.notesmd.notes.repository.NoteRepository;
 import com.notesmd.notes.repository.UserRepository;
 import com.notesmd.notes.security.JwtTokenService;
 import com.notesmd.notes.security.LoginThrottle;
+import java.time.Instant;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,13 @@ public class AuthService {
         noteRepository.deleteAllByOwnerId(userId);
         userRepository.deleteById(userId);
         log.info("Deleted account {}", userId);
+    }
+
+    /** Revokes every access token issued to the user so far, including the one making this request. */
+    @Transactional
+    public void signOutEverywhere(UUID userId) {
+        userRepository.findById(userId).ifPresent(user -> user.revokeAccessTokensIssuedUpTo(Instant.now()));
+        log.info("Signed out account {} everywhere", userId);
     }
 
     private boolean canSignIn(User user, String password) {
