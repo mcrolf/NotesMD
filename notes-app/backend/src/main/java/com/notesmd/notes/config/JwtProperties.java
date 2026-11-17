@@ -17,7 +17,7 @@ public class JwtProperties {
     private String issuer = "notesmd-api";
 
     @NotNull
-    private Duration accessTokenTtl = Duration.ofHours(1);
+    private Duration accessTokenTtl = Duration.ofDays(7);
 
     public String getSecret() {
         return secret;

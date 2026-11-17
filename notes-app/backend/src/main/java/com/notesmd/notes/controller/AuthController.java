@@ -38,6 +38,12 @@ public class AuthController {
         return authService.login(request, httpRequest.getRemoteAddr());
     }
 
+    @PostMapping("/sign-out-everywhere")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void signOutEverywhere(@AuthenticationPrincipal UUID userId) {
+        authService.signOutEverywhere(userId);
+    }
+
     @DeleteMapping("/account")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(

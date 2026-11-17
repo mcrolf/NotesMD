@@ -23,7 +23,7 @@ app:
     # Generate with: openssl rand -base64 48
     secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER:notesmd-api}
-    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:P7D}
 
   auth:
     # Set false after creating your accounts to close sign-ups (POST /api/auth/register returns 403).

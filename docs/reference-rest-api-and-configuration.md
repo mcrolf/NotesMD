@@ -66,6 +66,20 @@ Returns a JWT access token for an existing user.
 
 ---
 
+### `POST /api/auth/sign-out-everywhere`
+
+Signs the authenticated user out on every device. Every access token issued to the user up to this request, including the token that made it, returns `401` afterwards. Sign in again to get a new token.
+
+**Authentication:** Bearer JWT required.
+
+**Request body:** none.
+
+**Response:** `204 No Content`
+
+**Errors:** **`401 Unauthorized`** if the token is missing or invalid ([error body](#error-responses)).
+
+---
+
 ### `DELETE /api/auth/account`
 
 Permanently deletes the authenticated user and **all** of their notes, including archived notes. This cannot be undone. Access tokens issued to the deleted user return `401` immediately afterwards.
@@ -259,7 +273,7 @@ Set these in **`notes-app/.env`** (see `.env.example`).
 | `SPRING_DATASOURCE_PASSWORD` | DB password | **Required** — must match `POSTGRES_PASSWORD` |
 | `JWT_SECRET` | HS256 signing key for login tokens | **Required**, at least 32 bytes. The API refuses to start on the `.env.example` placeholder |
 | `JWT_ISSUER` | Token issuer claim | `notes-api` |
-| `JWT_ACCESS_TOKEN_TTL` | Access token lifetime (ISO-8601 duration) | `PT1H` (one hour) |
+| `JWT_ACCESS_TOKEN_TTL` | Access token lifetime (ISO-8601 duration). Users stay signed in this long; [sign out everywhere](#post-apiauthsign-out-everywhere) revokes tokens early | `P7D` (seven days) |
 | `CORS_ALLOWED_ORIGINS` | Allowed client origins | See [CORS](#cors) |
 | `REGISTRATION_ENABLED` | Allow `POST /api/auth/register` | `true`; set `false` after creating your accounts |
 | `LOGIN_MAX_FAILURES` | Failed logins per client address and username before lockout | `5` |
